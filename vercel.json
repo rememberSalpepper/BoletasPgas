@@ -1,19 +1,15 @@
 {
-    "builds": [
-      {
-        "src": "api/**/*.py",
-        "use": "@vercel/python"
-      }
-    ],
-    "functions": {
-      "api/**/*.py": {
-        "runtime": "python@3.9"
-      }
-    },
+    "version": 2,
     "routes": [
       {
         "src": "/api/(.*)",
         "dest": "/api/main.py"
       }
-    ]
+    ],
+    "functions": {
+      "api/**/*.py": {
+        "runtime": "python@3.9",
+        "includeFiles": "api/**"
+      }
+    }
   }
