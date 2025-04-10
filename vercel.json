@@ -1,4 +1,10 @@
 {
+    "builds": [
+      {
+        "src": "api/**/*.py",
+        "use": "@vercel/python"
+      }
+    ],
     "functions": {
       "api/**/*.py": {
         "runtime": "python@3.9"
@@ -11,4 +17,3 @@
       }
     ]
   }
-  
