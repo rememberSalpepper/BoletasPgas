@@ -11,6 +11,15 @@ import cv2
 import numpy as np
 from fastapi.middleware.cors import CORSMiddleware
 
+
+from http.server import BaseHTTPRequestHandler
+
+def handler(event, context):
+    return {
+        'statusCode': 200,
+        'body': '¡Funciona!'
+    }
+
 app = FastAPI()
 
 # Configuración de CORS: Permite peticiones desde cualquier origen
