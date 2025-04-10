@@ -1,3 +1,4 @@
+# main.py
 import io, json, re
 import pandas as pd
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
@@ -12,12 +13,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Configuración de CORS: Permite peticiones desde cualquier origen (útil en desarrollo)
-origins = ["*"]  # En producción, reemplaza "*" con tus dominios permitidos
+# Configuración de CORS: Permite peticiones desde cualquier origen
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins,  # En producción, reemplaza "*" por tus dominios permitidos
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -56,7 +57,7 @@ def extract_data(text: str) -> dict:
         "asunto": re.search(r"(?i)asunto:? ?([^\n]{5,60})", text),
     }
     
-    # Procesamos cada coincidencia y aplicamos fallback si es necesario:
+    # Procesa cada coincidencia aplicando fallback según corresponda
     return {
         k: (
             v.group(1) if v and v.lastindex
@@ -106,21 +107,14 @@ async def extract_multiple(files: List[UploadFile] = File(...)):
 @app.post("/export")
 async def export_excel(extracted_data: str = Form(...), base_excel: UploadFile = File(None)):
     """
-    Recibe:
-      - extracted_data: cadena JSON con los datos extraídos (puede ser un objeto o una lista de objetos).
-      - base_excel: (opcional) archivo Excel base a fusionar.
-      
-    Proceso:
-      1. Convierte el JSON a un objeto Python y se asegura de que sea una lista.
-      2. Crea un DataFrame a partir de esos datos.
-      3. Si se envía un archivo Excel base, lo lee y concatena con el nuevo DataFrame.
-      4. Genera y retorna un archivo Excel en memoria para su descarga.
+    Exporta los datos extraídos a un archivo Excel, aplicando un formato de tabla sencillo.
     """
     try:
         datos = json.loads(extracted_data)
     except Exception as e:
         return JSONResponse(status_code=422, content={"error": "JSON inválido", "detalles": str(e)})
     
+    # Si se recibe un objeto dict, lo convertimos en lista
     if isinstance(datos, dict):
         datos = [datos]
     
@@ -131,22 +125,46 @@ async def export_excel(extracted_data: str = Form(...), base_excel: UploadFile =
         try:
             base_df = pd.read_excel(io.BytesIO(contents))
         except Exception as e:
-            return JSONResponse(status_code=422, content={"error": "Error al leer el archivo Excel base", "detalles": str(e)})
+            return JSONResponse(
+                status_code=422,
+                content={"error": "Error al leer el archivo Excel base", "detalles": str(e)}
+            )
         merged_df = pd.concat([base_df, new_df], ignore_index=True)
     else:
         merged_df = new_df
 
     stream = io.BytesIO()
     with pd.ExcelWriter(stream, engine="openpyxl") as writer:
-        merged_df.to_excel(writer, index=False)
+        merged_df.to_excel(writer, index=False, sheet_name="Extraccion")
+        
+        # Importamos las funciones necesarias de openpyxl para agregar una tabla
+        from openpyxl.utils import get_column_letter
+        from openpyxl.worksheet.table import Table, TableStyleInfo
+        
+        workbook = writer.book
+        worksheet = writer.sheets["Extraccion"]
+        
+        num_rows, num_cols = merged_df.shape
+        last_col_letter = get_column_letter(num_cols)
+        # El rango va de A1 hasta la última celda con datos
+        table_range = f"A1:{last_col_letter}{num_rows + 1}"
+        
+        # Creamos la tabla con un estilo simple ("TableStyleLight1")
+        tab = Table(displayName="Table1", ref=table_range)
+        style = TableStyleInfo(
+            name="TableStyleLight1",  # Estilo simple y profesional
+            showFirstColumn=False,
+            showLastColumn=False,
+            showRowStripes=True,
+            showColumnStripes=False
+        )
+        tab.tableStyleInfo = style
+        worksheet.add_table(tab)
+        
     stream.seek(0)
     
     return StreamingResponse(
         stream,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=merged_data.xlsx"}
+        headers={"Content-Disposition": "attachment; filename=pgas_extraccion_boleta.xlsx"}
     )
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
