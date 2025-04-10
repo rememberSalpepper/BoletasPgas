@@ -8,8 +8,7 @@
     ],
     "functions": {
       "api/**/*.py": {
-        "runtime": "python@3.9",
-        "includeFiles": "api/**"
+        "runtime": "@vercel/python@3.9.12"
       }
     }
   }
