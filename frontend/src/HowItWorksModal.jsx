@@ -21,11 +21,12 @@ function HowItWorksModal({ isOpen, onClose }) {
       >
         <h2 className="text-3xl font-bold mb-4 text-gray-900">¿Cómo funciona?</h2>
         <p className="mb-4 text-gray-800">
-          MiApp utiliza tecnología OCR para extraer datos de tus comprobantes o boletas. 
+          Pgas Boletas utiliza tecnología OCR para extraer datos de tus comprobantes o boletas. 
           Solo tienes que subir hasta 10 imágenes, revisar la previsualización y luego extraer 
           los datos que se muestran en la tabla. Finalmente, puedes exportar toda la información 
           a un archivo Excel.
         </p>
+        <br></br>
         <p className="mb-6 text-gray-800 text-sm">
           <em>Disclaimer: No almacenamos ningún dato personal. La información se procesa de forma local y 
           se elimina de nuestros servidores tan pronto como se realiza la extracción.</em>
