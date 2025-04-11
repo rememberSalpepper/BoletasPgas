@@ -7,8 +7,13 @@ function Home() {
   const [previews, setPreviews] = useState([]);
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showTable, setShowTable] = useState(true); // Estado para controlar la visibilidad de la tabla
+  const [showTable, setShowTable] = useState(true);
 
+  useEffect(() => {
+    console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
+  }, []);
+
+  
   const handleFileChange = (e) => {
     const selected = Array.from(e.target.files);
     if (selected.length + files.length > 10) {
@@ -38,12 +43,12 @@ function Home() {
     }
     setLoading(true);
     const formData = new FormData();
-    files.forEach((file) => {
-      formData.append("files", file);
-    });
+    files.forEach((file) => formData.append("files", file));
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/extract_multi", {
+      // [CAMBIO] Usamos la variable de entorno en vez de la URL local
+      const baseURL = import.meta.env.VITE_API_URL; 
+      const res = await fetch(`${baseURL}/extract_multi`, {
         method: "POST",
         body: formData,
       });
@@ -52,12 +57,10 @@ function Home() {
       }
       const result = await res.json();
       setTableData(result.results || []);
-      setShowTable(true);  // Aseguramos que la tabla se muestre al extraer nuevos datos
+      setShowTable(true);
     } catch (error) {
       console.error("Error al extraer datos:", error);
-      alert(
-        "Ocurrió un error al extraer los datos. Verifica la consola para más detalles."
-      );
+      alert("Ocurrió un error al extraer los datos. Verifica la consola para más detalles.");
     }
     setLoading(false);
   };
@@ -77,7 +80,9 @@ function Home() {
     formData.append("extracted_data", extractedData);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/export", {
+      // [CAMBIO] Nuevamente, usamos la variable de entorno
+      const baseURL = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${baseURL}/export`, {
         method: "POST",
         body: formData,
       });
@@ -94,9 +99,7 @@ function Home() {
       a.remove();
     } catch (error) {
       console.error("Error al exportar a Excel:", error);
-      alert(
-        "Ocurrió un error al exportar los datos. Verifica la consola para más detalles."
-      );
+      alert("Ocurrió un error al exportar los datos. Verifica la consola para más detalles.");
     }
   };
 
