@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout: clona el repositorio en el runner
+      # 1. Clona el repositorio en el runner de GitHub Actions
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -18,20 +18,21 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
-      # 3. Instalar y configurar el SDK de Google Cloud
+      # 3. Configurar el SDK de Google Cloud
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCLOUD_PROJECT }}
 
-      # 4. Configurar Docker para autenticarse en Artifact Registry
+      # 4. Configurar Docker para autenticarse con Artifact Registry
       - name: Configure Docker authentication
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev
+          # Si usas otra región, ajusta aquí: gcloud auth configure-docker <REGION>-docker.pkg.dev
 
-      # 5. Construir la imagen Docker
+      # 5. Construir la imagen Docker (usando tu Dockerfile en la raíz del repo)
       - name: Build Docker image
         run: |
           docker build -t us-central1-docker.pkg.dev/${{ secrets.GCLOUD_PROJECT }}/frontend/frontend:${{ github.sha }} .
