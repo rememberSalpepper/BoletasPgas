@@ -26,7 +26,7 @@ jobs:
         with:
           project_id: ${{ secrets.GCLOUD_PROJECT }}
 
-      # 4. Configurar Docker para Artifact Registry
+      # 4. Configurar Docker para Artifact Registrya
       - name: Configure Docker authentication
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev
