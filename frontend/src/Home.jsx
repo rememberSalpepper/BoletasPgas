@@ -12,7 +12,7 @@ function Home() {
 
   // Mostrar en consola la variable de entorno para verificar
   useEffect(() => {
-    console.log("NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
+    console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
   }, []);
 
   const handleFileChange = (e) => {
@@ -47,8 +47,8 @@ function Home() {
     files.forEach((file) => formData.append("files", file));
 
     try {
-      // Usamos la variable de entorno definida en .env.local
-      const baseURL = process.env.NEXT_PUBLIC_API_URL;
+      // Usamos la variable de entorno definida en .env
+      const baseURL = import.meta.env.VITE_API_URL;
       const res = await fetch(`${baseURL}/extract_multi`, {
         method: "POST",
         body: formData,
@@ -81,7 +81,7 @@ function Home() {
     formData.append("extracted_data", extractedData);
 
     try {
-      const baseURL = process.env.NEXT_PUBLIC_API_URL;
+      const baseURL = import.meta.env.VITE_API_URL;
       const response = await fetch(`${baseURL}/export`, {
         method: "POST",
         body: formData,
@@ -193,66 +193,70 @@ function Home() {
 
         {tableData.length > 0 && showTable && (
           <motion.div
-            className="w-full max-w-6xl bg-white bg-opacity-80 backdrop-blur-md rounded-2xl shadow-2xl p-6 overflow-x-auto mb-8"
+            className="w-full max-w-6xl bg-white bg-opacity-80 backdrop-blur-md rounded-2xl shadow-2xl p-6 overflow-hidden mb-8"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="flex justify-between items-center mb-4">
+            {/* Cabecera: título y botón "X" fuera del contenedor con scroll */}
+            <div className="flex items-center">
               <h2 className="text-3xl font-bold text-gray-900">
                 Datos Extraídos
               </h2>
               <button
                 onClick={() => setShowTable(false)}
-                className="bg-gradient-to-r from-red-500 to-red-400 hover:from-red-600 hover:to-red-500 text-white font-bold py-1 px-4 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105"
+                className="ml-auto bg-gradient-to-r from-red-500 to-red-400 hover:from-red-600 hover:to-red-500 text-white font-bold py-1 px-4 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105"
               >
                 X
               </button>
             </div>
-            <table className="min-w-full text-gray-900">
-              <thead>
-                <tr className="border-b border-gray-300">
-                  {[
-                    "Archivo",
-                    "Estado",
-                    "Monto",
-                    "Destinatario",
-                    "Cuenta",
-                    "Fecha",
-                    "Hora",
-                    "Código",
-                    "Asunto",
-                  ].map((header, idx) => (
-                    <th key={idx} className="py-3 px-4 text-left font-semibold">
-                      {header}
-                    </th>
+            {/* Contenedor desplazable de la tabla */}
+            <div className="mt-4 overflow-x-auto">
+              <table className="min-w-full text-gray-900">
+                <thead>
+                  <tr className="border-b border-gray-300">
+                    {[
+                      "Archivo",
+                      "Estado",
+                      "Monto",
+                      "Destinatario",
+                      "Cuenta",
+                      "Fecha",
+                      "Hora",
+                      "Código",
+                      "Asunto",
+                    ].map((header, idx) => (
+                      <th key={idx} className="py-3 px-4 text-left font-semibold">
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {tableData.map((item, idx) => (
+                    <motion.tr
+                      key={idx}
+                      className="border-b border-gray-300 hover:bg-gray-100 transition-colors"
+                      initial={{ opacity: 0, x: -50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                    >
+                      <td className="py-3 px-4">
+                        {item.filename || `Boleta ${idx + 1}`}
+                      </td>
+                      <td className="py-3 px-4">{item.datos.estado || "-"}</td>
+                      <td className="py-3 px-4">{item.datos.monto || "-"}</td>
+                      <td className="py-3 px-4">{item.datos.destinatario || "-"}</td>
+                      <td className="py-3 px-4">{item.datos.cuenta || "-"}</td>
+                      <td className="py-3 px-4">{item.datos.fecha || "-"}</td>
+                      <td className="py-3 px-4">{item.datos.hora || "-"}</td>
+                      <td className="py-3 px-4">{item.datos.codigo_transf || "-"}</td>
+                      <td className="py-3 px-4">{item.datos.asunto || "-"}</td>
+                    </motion.tr>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {tableData.map((item, idx) => (
-                  <motion.tr
-                    key={idx}
-                    className="border-b border-gray-300 hover:bg-gray-100 transition-colors"
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                  >
-                    <td className="py-3 px-4">
-                      {item.filename || `Boleta ${idx + 1}`}
-                    </td>
-                    <td className="py-3 px-4">{item.datos.estado || "-"}</td>
-                    <td className="py-3 px-4">{item.datos.monto || "-"}</td>
-                    <td className="py-3 px-4">{item.datos.destinatario || "-"}</td>
-                    <td className="py-3 px-4">{item.datos.cuenta || "-"}</td>
-                    <td className="py-3 px-4">{item.datos.fecha || "-"}</td>
-                    <td className="py-3 px-4">{item.datos.hora || "-"}</td>
-                    <td className="py-3 px-4">{item.datos.codigo_transf || "-"}</td>
-                    <td className="py-3 px-4">{item.datos.asunto || "-"}</td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </motion.div>
         )}
 
