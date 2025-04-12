@@ -3,25 +3,31 @@ FROM node:20 AS build
 
 WORKDIR /app
 
-# Copia package.json y lockfile
+# Agregar un argumento para la variable de entorno
+ARG VITE_API_URL
+
+# Copiar package.json y package-lock.json
 COPY package*.json ./
 
-# Instala dependencias (incluye las devDependencies necesarias para compilar)
+# Instalar dependencias (incluye devDependencies)
 RUN npm install
 
-# Copia el resto de los archivos de la app
+# Crear archivo .env usando el valor del argumento
+RUN echo "VITE_API_URL=${VITE_API_URL}" > .env
+
+# Copiar el resto de los archivos de la app
 COPY . .
 
-# Construye la aplicación (Vite crea la carpeta /app/dist)
+# Construir la aplicación (Vite generará la carpeta /app/dist)
 RUN npm run build
 
 # Etapa 2: Producción
 FROM nginx:alpine
 
-# Copiamos los archivos estáticos generados en /app/dist
+# Copiar los archivos estáticos generados en /app/dist al contenedor de Nginx
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Expone el puerto 80
+# Exponer el puerto 80
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]

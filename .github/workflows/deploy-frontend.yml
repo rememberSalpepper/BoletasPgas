@@ -31,10 +31,12 @@ jobs:
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev
 
-      # 5. Construir la imagen Docker, usando la carpeta "frontend" como contexto
+      # 5. Construir la imagen Docker pasando el build-arg con la URL de la API
       - name: Build Docker image
         run: |
-          docker build -t us-central1-docker.pkg.dev/${{ secrets.GCLOUD_PROJECT }}/frontend/frontend:${{ github.sha }} ./frontend
+          docker build \
+            --build-arg VITE_API_URL=https://api-551745267811.us-central1.run.app \
+            -t us-central1-docker.pkg.dev/${{ secrets.GCLOUD_PROJECT }}/frontend/frontend:${{ github.sha }} ./frontend
 
       # 6. Subir la imagen a Artifact Registry
       - name: Push Docker image
