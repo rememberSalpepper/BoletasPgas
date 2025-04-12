@@ -1,4 +1,5 @@
-// src/Home.jsx
+'use client';
+
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
@@ -9,11 +10,11 @@ function Home() {
   const [loading, setLoading] = useState(false);
   const [showTable, setShowTable] = useState(true);
 
+  // Mostrar en consola la variable de entorno para verificar
   useEffect(() => {
-    console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
+    console.log("NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
   }, []);
 
-  
   const handleFileChange = (e) => {
     const selected = Array.from(e.target.files);
     if (selected.length + files.length > 10) {
@@ -46,8 +47,8 @@ function Home() {
     files.forEach((file) => formData.append("files", file));
 
     try {
-      // [CAMBIO] Usamos la variable de entorno en vez de la URL local
-      const baseURL = import.meta.env.VITE_API_URL; 
+      // Usamos la variable de entorno definida en .env.local
+      const baseURL = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${baseURL}/extract_multi`, {
         method: "POST",
         body: formData,
@@ -80,8 +81,7 @@ function Home() {
     formData.append("extracted_data", extractedData);
 
     try {
-      // [CAMBIO] Nuevamente, usamos la variable de entorno
-      const baseURL = import.meta.env.VITE_API_URL;
+      const baseURL = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(`${baseURL}/export`, {
         method: "POST",
         body: formData,
@@ -119,8 +119,6 @@ function Home() {
         }
       `}</style>
       <div className="absolute inset-0 bg-animated -z-20"></div>
-      {/* Nota: El componente Particles duplicado se ha eliminado de aquí.
-          Se asume que está siendo renderizado de forma centralizada (por ejemplo, en App.jsx). */}
 
       <div className="min-h-screen w-screen overflow-x-hidden flex flex-col items-center justify-center relative pt-24 pb-10 p-8 space-y-10 text-white">
         <motion.h1
@@ -208,7 +206,7 @@ function Home() {
                 onClick={() => setShowTable(false)}
                 className="bg-gradient-to-r from-red-500 to-red-400 hover:from-red-600 hover:to-red-500 text-white font-bold py-1 px-4 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105"
               >
-              X
+                X
               </button>
             </div>
             <table className="min-w-full text-gray-900">
@@ -269,15 +267,14 @@ function Home() {
 
         {tableData.length > 0 && (
           <motion.button
-          onClick={handleExport}
-          className="mt-8 bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          Exportar a Excel
-        </motion.button>
-        
+            onClick={handleExport}
+            className="mt-8 bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            Exportar a Excel
+          </motion.button>
         )}
       </div>
     </>
