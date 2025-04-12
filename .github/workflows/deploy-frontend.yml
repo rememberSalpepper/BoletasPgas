@@ -48,4 +48,5 @@ jobs:
             --image us-central1-docker.pkg.dev/${{ secrets.GCLOUD_PROJECT }}/frontend/frontend:${{ github.sha }} \
             --region us-central1 \
             --platform managed \
-            --allow-unauthenticated
+            --allow-unauthenticated \
+            --port 80
