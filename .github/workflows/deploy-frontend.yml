@@ -3,18 +3,18 @@ name: Deploy Frontend to Cloud Run
 on:
   push:
     branches:
-      - master  # usa "master" o "main", según la rama principal de tu repo
+      - master
 
 jobs:
   build-and-deploy-frontend:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout: clona el repositorio en el runner
+      # 1. Clonar el repositorio
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # 2. Autenticar a Google Cloud usando el secreto
+      # 2. Autenticarse en Google Cloud con el secreto GCP_CREDENTIALS
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
@@ -31,7 +31,7 @@ jobs:
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev
 
-      # 5. Construir la imagen Docker usando la carpeta "frontend" como contexto
+      # 5. Construir la imagen Docker, usando la carpeta "frontend" como contexto
       - name: Build Docker image
         run: |
           docker build -t us-central1-docker.pkg.dev/${{ secrets.GCLOUD_PROJECT }}/frontend/frontend:${{ github.sha }} ./frontend
