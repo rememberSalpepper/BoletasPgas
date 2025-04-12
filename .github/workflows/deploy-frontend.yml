@@ -1,0 +1,52 @@
+name: Deploy Frontend to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Clona el repositorio
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # 2. Autenticarse en Google Cloud
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      # 3. Configurar el Cloud SDK
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GCLOUD_PROJECT }}
+
+      # 4. Configurar Docker para Artifact Registry
+      - name: Configure Docker authentication
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+          # Ajusta la región si no es us-central1
+
+      # 5. Construir la imagen Docker, indicando la carpeta "frontend" donde vive tu Dockerfile
+      - name: Build Docker image
+        run: |
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.GCLOUD_PROJECT }}/frontend/frontend:${{ github.sha }} ./frontend
+
+      # 6. Subir la imagen a Artifact Registry
+      - name: Push Docker image
+        run: |
+          docker push us-central1-docker.pkg.dev/${{ secrets.GCLOUD_PROJECT }}/frontend/frontend:${{ github.sha }}
+
+      # 7. Desplegar la imagen a Cloud Run
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy frontend \
+            --image us-central1-docker.pkg.dev/${{ secrets.GCLOUD_PROJECT }}/frontend/frontend:${{ github.sha }} \
+            --region us-central1 \
+            --platform managed \
+            --allow-unauthenticated
