@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  basePath: '/pgapps/boletas',
   output: 'standalone',
   eslint: {
     ignoreDuringBuilds: true,
