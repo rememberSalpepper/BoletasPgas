@@ -1,6 +1,6 @@
+// frontend/next.config.mjs (SIN basePath)
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  basePath: '/pgapps/boletas',
   output: 'standalone',
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
