@@ -1,21 +1,36 @@
-"use client"
+// components/navbar.tsx (v3 - Sin Comentarios)
+"use client";
 
-import { useState } from "react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Info, X } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState } from "react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Info, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 z-50 w-full backdrop-blur-md bg-gradient-to-r from-teal-500/70 via-blue-500/70 to-cyan-500/70">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Image src="/images/logo.png" alt="Pgas Logo" width={50} height={50} className="h-12 w-auto" />
-          <Image src="/images/logo-text.png" alt="Pgas" width={100} height={40} className="h-10 w-auto" />
+    <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-md bg-gradient-to-r from-teal-500/70 via-blue-500/70 to-cyan-500/70 shadow-lg">
+      <div className="container flex h-16 items-center justify-between mx-auto px-4 sm:px-6">
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Image
+            src="/images/logo.png"
+            alt="Pgas Logo"
+            width={50} // Ajusta a tu imagen
+            height={50} // Ajusta a tu imagen
+            priority
+            className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
+          />
+          <Image
+            src="/images/logo-text.png"
+            alt="Pgas"
+            width={120} // Ajusta a proporción real de tu imagen
+            height={40}  // Ajusta a proporción real de tu imagen
+            className="h-auto w-20 sm:w-24 md:w-28 hidden sm:block object-contain"
+          />
         </div>
 
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -29,12 +44,8 @@ export default function Navbar() {
             {isOpen && (
               <DialogContent
                 className="sm:max-w-xl border-none shadow-xl bg-gradient-to-br from-white to-blue-50 p-0 overflow-hidden"
-                style={{
-                  boxShadow:
-                    "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset",
-                }}
+                style={{ boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset"}}
               >
-                {/* Botón de cierre con el mismo estilo que el de eliminar comprobantes */}
                 <div className="absolute right-0 top-0 pr-4 pt-4 sm:block">
                   <button
                     type="button"
@@ -45,7 +56,6 @@ export default function Navbar() {
                     <X className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
-
                 <motion.div
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -60,13 +70,11 @@ export default function Navbar() {
                       Información sobre el proceso de escaneo de boletas
                     </DialogDescription>
                   </div>
-
                   <div className="p-6 space-y-5 text-gray-700">
                     <p className="leading-relaxed">
                       Nuestro escáner de boletas utiliza tecnología de reconocimiento óptico de caracteres (OCR) para
                       extraer información de tus comprobantes de transferencia bancaria de manera rápida y precisa.
                     </p>
-
                     <div className="bg-blue-100/70 p-4 rounded-lg border-l-4 border-blue-500 flex items-start">
                       <div className="bg-blue-500 rounded-full p-1 mr-3 mt-0.5">
                         <Info className="h-4 w-4 text-white" />
@@ -76,7 +84,6 @@ export default function Navbar() {
                         Todo el procesamiento se realiza en el momento y los datos no se guardan en nuestros servidores.
                       </p>
                     </div>
-
                     <div>
                       <h3 className="text-lg font-bold text-blue-700 mb-3">Proceso en 4 pasos:</h3>
                       <ol className="space-y-3">
@@ -103,5 +110,5 @@ export default function Navbar() {
         </Dialog>
       </div>
     </header>
-  )
+  );
 }
