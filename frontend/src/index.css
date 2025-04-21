@@ -1,3 +1,4 @@
+/* index.css */
 @import "tailwindcss";
 
 /* Estilos para las partículas */
@@ -9,26 +10,19 @@
   height: 100%;
   pointer-events: none;
   overflow: hidden;
-  z-index: -5;
+  z-index: -5; /* Detrás de todo menos el fondo */
 }
 
 .particle {
   position: absolute;
   background: rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  /* Animación para un movimiento sutil */
   animation: moveParticle 5s ease-in-out infinite alternate;
 }
 
 @keyframes moveParticle {
-  0% {
-    transform: translate(0, 0) scale(2);
-    opacity: 0.7;
-  }
-  100% {
-    transform: translate(60px, 60px) scale(0.8);
-    opacity: 0.7;
-  }
+  0% { transform: translate(0, 0) scale(1); opacity: 0.3; } /* Sutil */
+  100% { transform: translate(40px, 40px) scale(0.6); opacity: 0.1; } /* Sutil */
 }
 
 /* Estilos para el fondo animado */
@@ -36,7 +30,7 @@
   background: linear-gradient(270deg, #20DBC8, #0CA0D9, #005FD9);
   background-size: 600% 600%;
   animation: gradientAnimation 12s ease infinite;
-  background-attachment: fixed; /* Fija el fondo al viewport para evitar movimientos al hacer scroll */
+  /* background-attachment: fixed; No es necesario si el div es fixed */
 }
 
 @keyframes gradientAnimation {
@@ -45,71 +39,27 @@
   100% { background-position: 0% 50%; }
 }
 
+/* Estilos base (Tailwind maneja la mayoría) */
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  color-scheme: light dark; /* O define tus propios colores */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  margin: 0; /* Importante quitar margen por defecto */
+  min-height: 100vh; /* Asegurar altura mínima */
+  background-color: #1a1a1a; /* Color de fondo base por si algo falla */
+  color: rgba(255, 255, 255, 0.87); /* Color de texto por defecto */
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
+/* Puedes eliminar estilos globales de button, h1, a si usas Tailwind consistentemente */
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+  /* Otros estilos base mínimos si no usas Tailwind en *todos* los botones */
 }

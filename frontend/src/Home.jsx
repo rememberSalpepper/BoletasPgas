@@ -24,17 +24,41 @@ function Home() {
   // Manejar selección de archivos
   const handleFileChange = (e) => {
     const selected = Array.from(e.target.files);
+    if (selected.length === 0) return; // No hacer nada si no se seleccionan archivos
+
     if (selected.length + files.length > 10) {
       alert("Máximo 10 boletas permitidas en total.");
+      // Limpiar selección para evitar confusión
+      e.target.value = null;
       return;
     }
-    const newFiles = [...files, ...selected];
-    setFiles(newFiles);
+    const currentFiles = [...files]; // Copia estado actual
+    const currentPreviews = [...previews]; // Copia estado actual
 
-    // Crear nuevos previews y limpiar los anteriores
-    const newPreviews = newFiles.map((file) => URL.createObjectURL(file)); // Crear previews para *todos* los archivos actuales
-    previews.forEach(URL.revokeObjectURL); // Limpiar URLs de objetos de previews anteriores
-    setPreviews(newPreviews);
+    const addedFiles = [];
+    const addedPreviews = [];
+
+    selected.forEach(file => {
+        // Evitar duplicados (opcional, basado en nombre y tamaño)
+        if (!currentFiles.some(f => f.name === file.name && f.size === file.size)) {
+            addedFiles.push(file);
+            addedPreviews.push(URL.createObjectURL(file));
+        } else {
+            console.warn(`Archivo duplicado omitido: ${file.name}`);
+        }
+    });
+
+    // Limpiar URLs de objeto anteriores *solo si se añadieron nuevos* para evitar parpadeo
+    if(addedFiles.length > 0) {
+        // previews.forEach(URL.revokeObjectURL); // Podría ser muy agresivo si no se remueven archivos
+    }
+
+
+    setFiles([...currentFiles, ...addedFiles]);
+    setPreviews([...currentPreviews, ...addedPreviews]);
+
+    // Limpiar el input para permitir volver a seleccionar el mismo archivo si se quitó
+    e.target.value = null;
   };
 
   // Quitar una boleta específica
@@ -42,18 +66,16 @@ function Home() {
     const updatedFiles = [...files];
     const updatedPreviews = [...previews];
 
-    // Revocar URL del preview que se va a quitar
     if (updatedPreviews[index]) {
-        URL.revokeObjectURL(updatedPreviews[index]);
+        URL.revokeObjectURL(updatedPreviews[index]); // Limpiar memoria
     }
 
     updatedFiles.splice(index, 1);
     updatedPreviews.splice(index, 1);
 
     setFiles(updatedFiles);
-    setPreviews(updatedPreviews); // Actualizar previews
+    setPreviews(updatedPreviews);
 
-    // Si no quedan archivos, limpiar tabla
     if (updatedFiles.length === 0) {
       setTableData([]);
       setShowTable(false);
@@ -67,28 +89,23 @@ function Home() {
       return;
     }
     setLoading(true);
-    setTableData([]); // Limpiar datos anteriores
-    setShowTable(false); // Ocultar tabla mientras carga
+    setTableData([]);
+    setShowTable(false);
     const formData = new FormData();
     files.forEach((file) => formData.append("files", file));
 
     try {
-      const baseURL = import.meta.env.VITE_API_URL || '/api'; // Usar /api como fallback si no está definida
-      const res = await fetch(`${baseURL}/extract_multi`, {
-        method: "POST",
-        body: formData,
-      });
+      const baseURL = import.meta.env.VITE_API_URL || '/api'; // Fallback
+      const res = await fetch(`${baseURL}/extract_multi`, { method: "POST", body: formData });
 
       if (!res.ok) {
         let errorDetail = `Error HTTP: ${res.status} ${res.statusText}`;
         try { const errorJson = await res.json(); errorDetail = errorJson.detail || errorDetail; } catch (jsonError) {}
         throw new Error(errorDetail);
       }
-
       const result = await res.json();
       setTableData(result.results || []);
       if (result.results && result.results.length > 0) { setShowTable(true); }
-
     } catch (error) {
       console.error("Error al extraer datos:", error);
       alert(`Ocurrió un error al extraer los datos: ${error.message}`);
@@ -101,18 +118,13 @@ function Home() {
   // Exportar los datos a Excel
   const handleExport = async () => {
     if (!tableData.length) { alert("No hay datos para exportar."); return; }
-
-    // Envolver la data actual de la tabla en el formato esperado por el backend
     const dataToSend = { results: tableData };
     const extractedDataString = JSON.stringify(dataToSend);
-
     const formData = new FormData();
     formData.append("extracted_results", extractedDataString);
-
     try {
       const baseURL = import.meta.env.VITE_API_URL || '/api';
       const response = await fetch(`${baseURL}/export`, { method: "POST", body: formData });
-
       if (!response.ok) {
         let errorDetail = `Error HTTP ${response.status}: ${response.statusText}`;
         try { const errorJson = await response.json(); errorDetail = errorJson.detail || errorDetail; } catch(e) {}
@@ -134,10 +146,10 @@ function Home() {
   const renderTable = () => {
     const headers = [ "Archivo", "Fecha y Hora", "Origen", "Destino", "Asunto / Descripción", "Monto", "Estado", "ID Operacion", "Error Extraccion" ];
     return (
-      <div className="mt-4 overflow-x-auto rounded-lg shadow"> {/* Añadido rounded-lg y shadow al contenedor del scroll */}
+      <div className="mt-4 overflow-x-auto rounded-lg shadow bg-white/80 backdrop-blur-sm"> {/* Fondo semi-transparente a la tabla */}
         <table className="min-w-full text-sm md:text-base text-gray-900">
-          <thead className="bg-gray-100"> {/* Fondo leggermente distinto para header */}
-            <tr className="border-b-2 border-gray-300"> {/* Borde más grueso */}
+          <thead className="bg-gray-100/80"> {/* Header también semi-transparente */}
+            <tr className="border-b-2 border-gray-300">
               {headers.map((header, idx) => (
                 <th key={idx} className="py-3 px-3 md:px-4 text-left font-semibold whitespace-nowrap">
                   {header}
@@ -145,12 +157,12 @@ function Home() {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200"> {/* Líneas divisorias más sutiles */}
+          <tbody className="divide-y divide-gray-200">
             {tableData.map((item, idx) => {
               const data = item.extracted_data || {};
               const hasError = !!data.error;
               let displayFechaHora = "-";
-              if (!hasError && (data.fecha || data.hora)) { displayFechaHora = `${data.fecha || ''} ${data.hora || ''}`.trim() || '-'; } // Asegurar '-' si es vacío
+              if (!hasError && (data.fecha || data.hora)) { displayFechaHora = `${data.fecha || ''} ${data.hora || ''}`.trim() || '-'; }
               let displayOrigen = "-";
                if (!hasError) { const remitente = data.remitente || {}; displayOrigen = remitente.nombre || data.banco_origen_app || remitente.banco || remitente.rut || "-"; }
                let displayDestino = "-";
@@ -159,20 +171,18 @@ function Home() {
               return (
                 <motion.tr
                   key={item.filename + idx}
-                  className={`transition-colors duration-150 ${hasError ? 'bg-red-50 hover:bg-red-100' : 'bg-white hover:bg-gray-50'}`} // Estilo mejorado error/hover
-                  initial={{ opacity: 0 }} // Animación más sutil
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: idx * 0.05, duration: 0.3 }} // Animación más rápida
+                  className={`transition-colors duration-150 ${hasError ? 'bg-red-100/80 hover:bg-red-200/80' : 'bg-white/70 hover:bg-gray-50/70'}`} // Fondos semi-transparentes
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.05, duration: 0.3 }}
                 >
                   <td className="py-2 md:py-3 px-3 md:px-4 whitespace-nowrap">{item.filename || `Fila ${idx + 1}`}</td>
                   <td className="py-2 md:py-3 px-3 md:px-4 whitespace-nowrap">{displayFechaHora}</td>
                   <td className="py-2 md:py-3 px-3 md:px-4 min-w-[150px]">{displayOrigen}</td>
                   <td className="py-2 md:py-3 px-3 md:px-4 min-w-[150px]">{displayDestino}</td>
                   <td className="py-2 md:py-3 px-3 md:px-4 min-w-[200px]">{hasError ? '-' : (data.asunto || "-")}</td>
-                  <td className="py-2 md:py-3 px-3 md:px-4 whitespace-nowrap text-right font-medium">{hasError ? '-' : formatCurrency(data.monto)}</td> {/* Alineado a la derecha */}
+                  <td className="py-2 md:py-3 px-3 md:px-4 whitespace-nowrap text-right font-medium">{hasError ? '-' : formatCurrency(data.monto)}</td>
                   <td className="py-2 md:py-3 px-3 md:px-4 whitespace-nowrap">{hasError ? '-' : (data.estado || "-")}</td>
                   <td className="py-2 md:py-3 px-3 md:px-4">{hasError ? '-' : (data.codigo_transaccion || "-")}</td>
-                  <td className="py-2 md:py-3 px-3 md:px-4 text-red-600 font-medium">{hasError ? data.error : "-"}</td>
+                  <td className="py-2 md:py-3 px-3 md:px-4 text-red-700 font-medium">{hasError ? data.error : "-"}</td>{/* Texto error más oscuro */}
                 </motion.tr>
               );
             })}
@@ -186,15 +196,13 @@ function Home() {
   return (
     <>
       {/* Fondo animado fijo */}
-      <style>{`
-        .bg-animated { background: linear-gradient(270deg, #20DBC8, #0CA0D9, #005FD9); background-size: 600% 600%; animation: gradientAnimation 12s ease infinite; }
-        @keyframes gradientAnimation { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-      `}</style>
-      <div className="fixed inset-0 bg-animated -z-20"></div> {/* Cambiado a fixed */}
+      <div className="fixed inset-0 bg-animated -z-20"></div>
 
       {/* Contenedor Principal Centrado y con Padding para Navbar */}
+      {/* Clases clave: min-h-screen, flex, flex-col, items-center, justify-center, relative, pt-... */}
       <div className="min-h-screen w-full flex flex-col items-center justify-center relative pt-24 sm:pt-28 md:pt-32 pb-10 px-4 sm:px-6 lg:px-8 space-y-8 md:space-y-10 text-white">
         {/* === AJUSTA ESTE PADDING TOP (pt-...) SEGÚN LA ALTURA DE TU NAVBAR === */}
+        {/* Ejemplo: pt-20 = 5rem, pt-24 = 6rem, pt-28 = 7rem, pt-32 = 8rem */}
 
         {/* Título */}
         <motion.h1
@@ -224,9 +232,9 @@ function Home() {
           >
             {previews.map((src, idx) => (
               <motion.div key={idx} className="relative aspect-video sm:aspect-square" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: idx * 0.1 }} >
-                <img src={src} alt={`Boleta ${idx + 1}`} className="w-full h-32 sm:h-40 md:h-48 object-cover rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg" />
-                <div className="absolute bottom-1 left-1 sm:bottom-2 sm:left-2 bg-black bg-opacity-60 text-white text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full"> Boleta {idx + 1} </div>
-                <button onClick={() => handleRemoveBoleta(idx)} className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-red-600 text-white w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-xs sm:text-sm hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50" aria-label={`Quitar Boleta ${idx + 1}`} > X </button>
+                <img src={src} alt={`Boleta ${idx + 1}`} className="w-full h-32 sm:h-40 md:h-48 object-cover rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg border-2 border-white/30" /> {/* Borde sutil */}
+                <div className="absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 bg-black bg-opacity-70 text-white text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full backdrop-blur-sm"> Boleta {idx + 1} </div>
+                <button onClick={() => handleRemoveBoleta(idx)} className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 bg-red-600/80 text-white w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-xs sm:text-sm font-bold hover:bg-red-700/90 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 backdrop-blur-sm" aria-label={`Quitar Boleta ${idx + 1}`} >✕</button> {/* Icono X más claro */}
               </motion.div>
             ))}
           </motion.div>
@@ -235,14 +243,14 @@ function Home() {
         {/* Tabla de Resultados */}
         {tableData.length > 0 && showTable && (
           <motion.div
-            className="w-full max-w-7xl bg-white bg-opacity-95 backdrop-blur-md rounded-xl md:rounded-2xl shadow-2xl p-3 sm:p-4 md:p-6 overflow-hidden mb-8"
+            className="w-full max-w-7xl rounded-xl md:rounded-2xl shadow-2xl overflow-hidden mb-8" // Quitar fondo aquí, se maneja en el div de renderTable
             initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }}
           >
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <div className="flex items-center justify-between mb-3 sm:mb-4 px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6 bg-white/90 backdrop-blur-md rounded-t-xl md:rounded-t-2xl"> {/* Header separado con fondo */}
               <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900"> Datos Extraídos </h2>
-              <button onClick={() => setShowTable(false)} className="bg-gradient-to-r from-red-500 to-red-400 hover:from-red-600 hover:to-red-500 text-white font-bold py-1 px-3 sm:py-1 sm:px-4 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105" > X </button>
+              <button onClick={() => setShowTable(false)} className="bg-gradient-to-r from-red-500/80 to-red-400/80 hover:from-red-600 hover:to-red-500 text-white font-bold py-1 px-3 sm:py-1 sm:px-4 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105" > X </button>
             </div>
-            {renderTable()} {/* Llama a la función de renderizado */}
+            {renderTable()}
           </motion.div>
         )}
 
