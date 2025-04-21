@@ -210,7 +210,7 @@ export default function Home() {
           transition={{ duration: 0.8, delay: 0.4, type: "spring" }}
         >
           <div className="flex items-center justify-center mb-4 gap-3">
-            <Image src="/images/logo.png" alt="Logo" width={40} height={40} className="h-10 w-auto" />
+            <Image src="images/logo.png" alt="Logo" width={40} height={40} className="h-10 w-auto" />
             <label className="text-lg font-medium text-gray-900 text-center">Sube tus boletas (máx. 10)</label>
           </div>
 

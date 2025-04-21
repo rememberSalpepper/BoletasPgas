@@ -17,7 +17,7 @@ export default function Navbar() {
 
         <div className="flex items-center gap-2 flex-shrink-0">
           <Image
-            src="/images/logo.png"
+            src="images/logo.png"
             alt="Pgas Logo"
             width={50} // Ajusta a tu imagen
             height={50} // Ajusta a tu imagen
@@ -25,7 +25,7 @@ export default function Navbar() {
             className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
           />
           <Image
-            src="/images/logo-text.png"
+            src="images/logo-text.png"
             alt="Pgas"
             width={120} // Ajusta a proporción real de tu imagen
             height={40}  // Ajusta a proporción real de tu imagen
