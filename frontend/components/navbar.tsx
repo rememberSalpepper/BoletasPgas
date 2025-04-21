@@ -1,13 +1,14 @@
+// components/navbar.tsx (CORREGIDO v5 - Negrita y Botón X)
 "use client";
 
 import { useState } from "react";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from "@/components/ui/dialog"; // Importa DialogClose y DialogHeader
-import { Info, X, ScanLine, BrainCircuit, Table, FileDown, Upload } from "lucide-react"; // Importa todos los iconos
+import { Button } from "@/components/ui/button"; // Asegúrate que Button se importa
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Info, X, ScanLine, BrainCircuit, Table, FileDown, Upload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const ASSET_PREFIX = '/pgapps/boletas'; // Definir prefijo
+const ASSET_PREFIX = '/pgapps/boletas';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,7 +32,6 @@ export default function Navbar() {
           />
         </div>
 
-        {/* --- INICIO MODAL --- */}
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-1 text-white hover:bg-white/20">
@@ -42,12 +42,9 @@ export default function Navbar() {
           <AnimatePresence>
             {isOpen && (
               <DialogContent
-                // Clases para responsividad y scroll
-                className="w-full max-w-md sm:max-w-lg lg:max-w-2xl max-h-[85vh] overflow-hidden p-0 border-none shadow-xl bg-white flex flex-col"
-                // Evitar que el overlay cierre al hacer click fuera si se prefiere: onInteractOutside={(e) => e.preventDefault()}
+                className="w-full max-w-md sm:max-w-lg lg:max-w-2xl max-h-[85vh] overflow-hidden p-0 border-none shadow-xl bg-white flex flex-col" // overflow-hidden en content, scroll en div interno
               >
-                 {/* Encabezado Fijo */}
-                 <DialogHeader className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-cyan-500 p-4 sm:p-6 text-white shadow-md">
+                 <DialogHeader className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-cyan-500 p-4 sm:p-6 text-white shadow-md rounded-t-lg"> {/* rounded-t-lg */}
                      <div className="flex justify-between items-center">
                          <div className="flex items-center gap-3">
                              <div className="bg-white/20 rounded-full p-2">
@@ -60,21 +57,24 @@ export default function Navbar() {
                                  </DialogDescription>
                              </div>
                          </div>
-                         {/* Botón de cierre único */}
+                         {/* --- Botón de Cierre Corregido --- */}
                          <DialogClose asChild>
-                            <Button variant="ghost" size="icon" className="text-white/70 hover:text-white hover:bg-white/20 rounded-full">
+                             {/* Usar variant="ghost" y size="icon" de shadcn Button */}
+                            <Button type="button" variant="ghost" size="icon" className="rounded-full text-white/70 hover:text-white hover:bg-white/20 focus-visible:ring-offset-0 focus-visible:ring-2 focus-visible:ring-white/50">
                                  <X className="h-5 w-5" />
                                  <span className="sr-only">Cerrar</span>
                             </Button>
                          </DialogClose>
+                         {/* --------------------------------- */}
                      </div>
                  </DialogHeader>
 
-                 {/* Contenido Principal con Scroll Interno */}
-                 <div className="p-4 sm:p-6 space-y-5 text-gray-700 overflow-y-auto flex-1">
+                 <div className="p-4 sm:p-6 space-y-5 text-gray-700 overflow-y-auto flex-1"> {/* Scroll aquí */}
+                   {/* --- Texto con <strong> --- */}
                     <p className="leading-relaxed text-base sm:text-lg">
-                      Nuestra herramienta combina **Reconocimiento Óptico de Caracteres (OCR)** para leer el texto de tus imágenes, y luego usa **Inteligencia Artificial (IA - Google Gemini)** para comprender y extraer la información clave de forma estructurada y precisa.
+                      Nuestra herramienta combina <strong>Reconocimiento Óptico de Caracteres (OCR)</strong> para leer el texto de tus imágenes, y luego usa <strong>Inteligencia Artificial (IA - Google Gemini)</strong> como Modelo de Lenguaje Grande (LLM) para comprender y extraer la información clave de forma estructurada y precisa.
                     </p>
+                    {/* ------------------------ */}
                     <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500 flex items-start gap-3">
                       <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                       <p className="text-blue-800 text-sm sm:text-base">
@@ -87,7 +87,7 @@ export default function Navbar() {
                         {[
                           { icon: Upload, text: "Sube uno o varios comprobantes (JPG, PNG)." },
                           { icon: ScanLine, text: "La tecnología OCR digitaliza el texto de las imágenes." },
-                          { icon: BrainCircuit, text: "Nuestra IA analiza el texto, identifica los campos relevantes (monto, fecha, RUT, etc.) y los extrae." },
+                          { icon: BrainCircuit, text: "Nuestra IA (LLM - Gemini) analiza el texto, identifica los campos relevantes (monto, fecha, RUT, etc.) y los extrae." }, // Añadido LLM
                           { icon: Table, text: "Revisa la información organizada en la tabla de resultados." },
                           { icon: FileDown, text: "Exporta fácilmente todos los datos a un archivo Excel con un clic." },
                         ].map((step, index) => (
@@ -105,7 +105,6 @@ export default function Navbar() {
             )}
           </AnimatePresence>
         </Dialog>
-         {/* --- FIN MODAL --- */}
 
       </div>
     </header>
