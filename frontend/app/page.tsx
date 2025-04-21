@@ -6,9 +6,7 @@ import { Particles } from "@/components/particles";
 import { FileUploader } from "@/components/file-uploader";
 import { ResultsTable } from "@/components/results-table";
 import { Loader2, FileText } from "lucide-react";
-import Image from "next/image";
-
-const ASSET_PREFIX = '/pgapps/boletas';
+import NextImage from "next/image"; // Renombrado para evitar conflicto con <img>
 
 export default function Home() {
   const [files, setFiles] = useState<File[]>([]);
@@ -66,8 +64,7 @@ export default function Home() {
     setFiles(updatedFiles);
     setPreviews(updatedPreviews);
     if (updatedFiles.length === 0) {
-      // setTableData([]); // No existe tableData state aquí
-      setResults([]); // Limpiar resultados si se quitan todos los archivos
+      setResults([]);
       setShowTable(false);
     }
   };
@@ -84,10 +81,10 @@ export default function Home() {
 
       if (requiresMulti) {
         files.forEach((file) => formData.append("files", file));
-        apiUrl = "/api/extract-multi";
+        apiUrl = "/api/extract-multi"; // Llamada relativa a la raíz
       } else {
         formData.append("file", files[0]);
-        apiUrl = "/api/extract";
+        apiUrl = "/api/extract"; // Llamada relativa a la raíz
       }
 
       const response = await fetch(apiUrl, { method: "POST", body: formData });
@@ -127,7 +124,7 @@ export default function Home() {
           }
       });
       formData.append("extracted_results", JSON.stringify({ results: formattedResults }));
-      const response = await fetch("/api/export", { method: "POST", body: formData });
+      const response = await fetch("/api/export", { method: "POST", body: formData }); // Llamada relativa a la raíz
       if (!response.ok) {
          const errorData = await response.json().catch(() => ({ error: `Error HTTP ${response.status}` }));
         throw new Error(errorData.error || `Error: ${response.status}`);
@@ -171,8 +168,8 @@ export default function Home() {
           initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.2 }}
         >
           <div className="flex items-center justify-center mb-4 gap-3">
-            <Image
-              src={`${ASSET_PREFIX}/images/logo.png`}
+            <NextImage
+              src="/images/logo.png" // Ruta relativa a /public
               alt="Logo"
               width={40} height={40}
               className="h-8 w-8 sm:h-10 sm:w-10 object-contain"
@@ -199,12 +196,11 @@ export default function Home() {
           >
             {previews.map((src, idx) => (
               <motion.div key={idx} className="relative aspect-w-4 aspect-h-3 group" variants={itemVariants}>
-                <Image
+                <img
                   src={src || "/placeholder.svg"}
                   alt={`Boleta ${idx + 1}`}
-                  fill
-                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                  className="object-cover rounded-xl shadow-lg border-2 border-white/20"
+                  loading="lazy"
+                  className="w-full h-full object-cover rounded-xl shadow-lg border-2 border-white/20"
                 />
                 <div className="absolute bottom-1.5 left-1.5 bg-black bg-opacity-70 text-white text-[10px] px-1.5 py-0.5 rounded-full backdrop-blur-sm">
                    {files[idx]?.name ? (files[idx].name.length > 15 ? files[idx].name.substring(0,12)+'...' : files[idx].name) : `Boleta ${idx+1}`}
@@ -237,7 +233,6 @@ export default function Home() {
                  Ocultar Tabla
                </motion.button>
             </div>
-            {/* Asegúrate que ResultsTable está definido y recibe 'results' */}
             <ResultsTable results={results} />
            </motion.div>
         )}
