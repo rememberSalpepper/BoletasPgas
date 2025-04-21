@@ -66,7 +66,8 @@ export default function Home() {
     setFiles(updatedFiles);
     setPreviews(updatedPreviews);
     if (updatedFiles.length === 0) {
-      setTableData([]);
+      // setTableData([]); // No existe tableData state aquí
+      setResults([]); // Limpiar resultados si se quitan todos los archivos
       setShowTable(false);
     }
   };
@@ -74,7 +75,7 @@ export default function Home() {
   const handleExtract = async () => {
     if (files.length === 0) return;
     setIsLoading(true);
-    setResults([]); // Limpiar resultados anteriores
+    setResults([]);
     setShowTable(false);
     try {
       const formData = new FormData();
@@ -97,7 +98,6 @@ export default function Home() {
       }
 
       const data = await response.json();
-      // Normalizar la respuesta para que 'results' siempre sea un array
       setResults(requiresMulti ? (data.results || []) : [data]);
       if ((requiresMulti && data.results?.length > 0) || (!requiresMulti && data)) {
           setShowTable(true);
@@ -116,27 +116,17 @@ export default function Home() {
     if (results.length === 0) { alert("No hay resultados para exportar."); return; }
     try {
       const formData = new FormData();
-      // Enviar la estructura que espera el backend { "results": [...] }
-      // Asegurándose de que cada item en results tenga la estructura { filename: ..., extracted_data: ... }
-      // Si tu estado `results` ya tiene esa estructura por `extract-multi`, perfecto.
-      // Si viene de `extract` (único), `handleExtract` lo puso en un array `[data]`,
-      // pero 'data' puede ser directamente el objeto gemini_data. Necesitamos asegurar la estructura.
       const formattedResults = results.map(item => {
           if (item && item.filename && item.extracted_data) {
-              return item; // Ya tiene el formato correcto (probablemente de extract-multi)
+              return item;
           } else if (item && !item.filename && !item.error) {
-               // Asume que es el resultado directo de /extract (solo gemini_data)
-               // Intenta obtener el nombre del archivo original si es posible
-               const originalFile = files.find((f, i) => i === results.indexOf(item)); // Encuentra el archivo correspondiente
+               const originalFile = files.find((f, i) => i === results.indexOf(item));
                return { filename: originalFile?.name || `resultado_${results.indexOf(item) + 1}`, extracted_data: item };
           } else {
-               // Es un item con error o formato inesperado
                return { filename: item?.filename || `error_${results.indexOf(item) + 1}`, extracted_data: { error: item?.error || "Formato desconocido" } };
           }
       });
-
       formData.append("extracted_results", JSON.stringify({ results: formattedResults }));
-
       const response = await fetch("/api/export", { method: "POST", body: formData });
       if (!response.ok) {
          const errorData = await response.json().catch(() => ({ error: `Error HTTP ${response.status}` }));
@@ -210,14 +200,14 @@ export default function Home() {
             {previews.map((src, idx) => (
               <motion.div key={idx} className="relative aspect-w-4 aspect-h-3 group" variants={itemVariants}>
                 <Image
-                  src={src || "/placeholder.svg"} // Usa src directamente, ya es un ObjectURL
+                  src={src || "/placeholder.svg"}
                   alt={`Boleta ${idx + 1}`}
-                  fill // Usa fill para llenar el contenedor aspect-ratio
-                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw" // Ayuda a optimizar
-                  className="object-cover rounded-xl shadow-lg border-2 border-white/20" // object-cover con fill
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                  className="object-cover rounded-xl shadow-lg border-2 border-white/20"
                 />
                 <div className="absolute bottom-1.5 left-1.5 bg-black bg-opacity-70 text-white text-[10px] px-1.5 py-0.5 rounded-full backdrop-blur-sm">
-                   {files[idx]?.name ? (files[idx].name.length > 15 ? files[idx].name.substring(0,12)+'...' : files[idx].name) : `Boleta ${idx+1}`} {/* Mostrar nombre corto */}
+                   {files[idx]?.name ? (files[idx].name.length > 15 ? files[idx].name.substring(0,12)+'...' : files[idx].name) : `Boleta ${idx+1}`}
                 </div>
                 <motion.button
                   onClick={() => handleRemoveBoleta(idx)}
@@ -234,20 +224,21 @@ export default function Home() {
 
         {results.length > 0 && showTable && (
           <motion.div
-             className="w-full max-w-7xl" // Ajusta max-w si es necesario
+             className="w-full max-w-7xl"
              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, type: "spring" }}
            >
             <div className="flex justify-between items-center mb-4 px-1">
               <h2 className="text-xl sm:text-2xl font-bold text-white/90">Resultados Extraídos</h2>
                <motion.button
-                 onClick={() => setShowTable(false)} // Añadir botón para ocultar tabla
+                 onClick={() => setShowTable(false)}
                  className="bg-gradient-to-r from-slate-500/70 to-gray-600/70 hover:from-slate-600 hover:to-gray-700 text-white font-bold py-1.5 px-4 rounded-lg shadow-md transform transition-all duration-300 hover:scale-105 text-sm"
                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                >
                  Ocultar Tabla
                </motion.button>
             </div>
-            <ResultsTable results={results} /> {/* Pasa los resultados al componente de tabla */}
+            {/* Asegúrate que ResultsTable está definido y recibe 'results' */}
+            <ResultsTable results={results} />
            </motion.div>
         )}
 
@@ -257,7 +248,6 @@ export default function Home() {
           </motion.button>
         )}
 
-         {/* Botón Exportar visible solo si hay resultados */}
          {results.length > 0 && (
            <motion.button
              onClick={handleExport}
