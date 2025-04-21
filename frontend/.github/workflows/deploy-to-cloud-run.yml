@@ -7,10 +7,11 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCLOUD_PROJECT }}
-  GAR_LOCATION: us-central1 # O tu región
-  SERVICE_NAME: frontend # Nombre servicio Cloud Run
-  REGION: us-central1 # Región Cloud Run
-  # NO necesitamos la variable intermedia aquí
+  GAR_LOCATION: us-central1
+  SERVICE_NAME: frontend
+  REGION: us-central1
+  # Nombre del secreto en GitHub que contiene la URL de la API Python
+  API_PYTHON_SECRET: ${{ secrets.API_BASE_URL }} # Usa el nombre de TU secreto aquí
 
 jobs:
   build-and-deploy-frontend:
@@ -23,12 +24,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      # --- Autenticación (Tu método actual) ---
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-      # --------------------------------------
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }} # O tu config WIF
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
@@ -38,20 +37,20 @@ jobs:
       - name: Configure Docker
         run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev
 
-      # Construir imagen pasando DIRECTAMENTE el secreto al build-arg con el nombre VITE_API_URL
+      # Construir imagen pasando el secreto al build-arg PYTHON_API_URL
       - name: Build Docker image
         run: |
           docker build \
-            --build-arg VITE_API_URL=${{ secrets.API_BASE_URL }} \ # <-- Usa el secreto directamente
+            --build-arg PYTHON_API_URL=${{ env.API_PYTHON_SECRET }} \ # <-- Nombre corregido
             -t ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
-            ./frontend # Asegúrate que el contexto sea la carpeta frontend
+            ./frontend
 
       # Subir imagen
       - name: Push Docker image
         run: |
           docker push ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
 
-      # Desplegar a Cloud Run pasando DIRECTAMENTE el secreto a la variable de entorno VITE_API_URL
+      # Desplegar a Cloud Run pasando la variable de entorno PYTHON_API_URL
       - name: Deploy to Cloud Run
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v1
@@ -59,9 +58,8 @@ jobs:
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.REGION }}
           image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
-          # ---> Pasar la variable de entorno VITE_API_URL con el valor del secreto <---
-          env_vars: |-
-            VITE_API_URL=${{ secrets.API_BASE_URL }} # <-- Usa el secreto directamente
+          env_vars: |- # <-- Nombre corregido
+            PYTHON_API_URL=${{ env.API_PYTHON_SECRET }}
             PORT=8080
             NODE_ENV=production
           flags: --allow-unauthenticated
