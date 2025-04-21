@@ -7,23 +7,16 @@ import Particles from "./Particles"; // Asegúrate que la ruta es correcta
 // import { Helmet } from "react-helmet"; // Descomenta si usas Helmet
 
 function App() {
-  const [modalOpen, setModalOpen] = useState(false);
-
+  // ... state ...
   return (
-    <>
-      {/* Navbar - Su posición será controlada por sus propias clases CSS (fixed) */}
+    // Añade bg-pink-500 aquí
+    <div className="bg-pink-500">
       <Navbar openModal={() => setModalOpen(true)} />
       <HowItWorksModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
-
-      {/* Fondo Animado - Fijo y detrás de todo */}
-      <div className="fixed inset-0 bg-animated -z-20"></div>
-
-      {/* Partículas - Fijas y detrás */}
-      <Particles />
-
-      {/* Home - Contiene el contenido principal que será centrado */}
+      {/* <div className="fixed inset-0 bg-animated -z-20"></div> */} {/* Comenta el fondo temporalmente */}
+      {/* <Particles /> */} {/* Comenta partículas temporalmente */}
       <Home />
-    </>
+    </div>
   );
 }
 

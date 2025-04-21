@@ -1,6 +1,6 @@
-/* index.css */
-@import "tailwindcss";
-
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 /* Estilos para las partículas */
 .particle-overlay {
   position: fixed;
