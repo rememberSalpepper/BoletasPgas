@@ -15,9 +15,9 @@ RUN npm install --legacy-peer-deps
 COPY . .
 
 # Definir el argumento que se pasará durante el build de Docker
-ARG VITE_API_URL # <-- Nombre corregido
+ARG PYTHON_API_URL # Usando el nombre consistente
 # Establecer la variable de entorno para que esté disponible durante el build de Next.js
-ENV VITE_API_URL=${VITE_API_URL}
+ENV PYTHON_API_URL=${PYTHON_API_URL}
 # Asegurar que el build se ejecute en modo producción
 ENV NODE_ENV=production
 
@@ -45,23 +45,19 @@ COPY --from=build /app/package.json ./package.json
 
 # Copiar artefactos de build de Next.js y archivos públicos
 COPY --from=build /app/public ./public
-# Asumiendo salida standalone (verifica tu build local)
-COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Copia la carpeta .next completa (ya que no usamos output: standalone)
+COPY --from=build --chown=nextjs:nodejs /app/.next ./.next
 # Copia la configuración de Next.js
 COPY --from=build /app/next.config.mjs ./
 
 # Pasar la variable de entorno de la API para runtime
-ARG VITE_API_URL # <-- Nombre corregido
-ENV VITE_API_URL=${VITE_API_URL}
+ARG PYTHON_API_URL # Usando el nombre consistente
+ENV PYTHON_API_URL=${PYTHON_API_URL}
 
 # Cambiar al usuario no privilegiado
 USER nextjs
 
 EXPOSE 8080
 
-# Comando para iniciar el servidor de Next.js en producción (asumiendo standalone)
-CMD ["node", "server.js"]
-# Si no usas standalone, comenta la línea anterior y descomenta las siguientes:
-# COPY --from=build --chown=nextjs:nodejs /app/.next ./.next # Copia .next completo
-# CMD ["node_modules/.bin/next", "start"] # Usa el comando next start
+# Comando para iniciar el servidor de Next.js estándar
+CMD ["node_modules/.bin/next", "start"]
