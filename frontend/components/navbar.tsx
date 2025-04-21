@@ -1,4 +1,3 @@
-// components/navbar.tsx (v3 - Sin Comentarios)
 "use client";
 
 import { useState } from "react";
@@ -7,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Info, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const ASSET_PREFIX = '/pgapps/boletas'; // Definir prefijo
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,18 +18,18 @@ export default function Navbar() {
 
         <div className="flex items-center gap-2 flex-shrink-0">
           <Image
-            src="images/logo.png"
+            src={`${ASSET_PREFIX}/images/logo.png`} // Prefijo añadido
             alt="Pgas Logo"
-            width={50} // Ajusta a tu imagen
-            height={50} // Ajusta a tu imagen
+            width={50}
+            height={50}
             priority
             className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
           />
           <Image
-            src="images/logo-text.png"
+            src={`${ASSET_PREFIX}/images/logo-text.png`} // Prefijo añadido
             alt="Pgas"
-            width={120} // Ajusta a proporción real de tu imagen
-            height={40}  // Ajusta a proporción real de tu imagen
+            width={120} // Ajusta a proporción real
+            height={40}  // Ajusta a proporción real
             className="h-auto w-20 sm:w-24 md:w-28 hidden sm:block object-contain"
           />
         </div>
