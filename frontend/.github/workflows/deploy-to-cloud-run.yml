@@ -3,65 +3,69 @@ name: Deploy Frontend (Next.js) to Cloud Run
 on:
   push:
     branches:
-      - main
+      - main # O la rama donde está el código del frontend
 
 env:
   PROJECT_ID: ${{ secrets.GCLOUD_PROJECT }} # Usa el secreto existente
-  GAR_LOCATION: us-central1
-  SERVICE_NAME: frontend
-  REGION: us-central1
-  # NO necesitamos definir API_PYTHON_SECRET aquí
+  GAR_LOCATION: us-central1                # O tu región de Artifact Registry
+  SERVICE_NAME: frontend                   # Nombre del servicio Frontend en Cloud Run
+  REGION: us-central1                      # Región de Cloud Run
 
 jobs:
   build-and-deploy-frontend:
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
-      id-token: 'write' # Necesario si usaras WIF, puede quitarse si solo usas credentials_json
+      id-token: 'write' # Para autenticación WIF (si la usas)
 
     steps:
-      - name: Checkout
+      - name: Checkout Frontend repository code
         uses: actions/checkout@v3
 
+      # --- Autenticación: Usa tu método configurado ---
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }} # Usa el secreto existente
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }} # Usa tu secreto de credenciales JSON
+          # O si usas WIF:
+          # workload_identity_provider: 'projects/...'
+          # service_account: '...'
+      # ---------------------------------------------
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: ${{ env.PROJECT_ID }} # Usa la variable env definida arriba
+          project_id: ${{ env.PROJECT_ID }}
 
       - name: Configure Docker
         run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev
 
-      # Construir imagen pasando el SECRETO VITE_API_URL al build-arg PYTHON_API_URL
-      - name: Build Docker image
+      # Construir la imagen Docker pasando el secreto correcto al argumento correcto
+      - name: Build Docker image (Frontend)
         run: |
           docker build \
-            --build-arg PYTHON_API_URL=${{ secrets.VITE_API_URL }} \ # <-- Usa tu secreto VITE_API_URL
+            --build-arg PYTHON_API_URL=${{ secrets.PYTHON_API_URL }} \ # <-- CORREGIDO: Lee el secreto PYTHON_API_URL
             -t ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
-            ./frontend # Asegúrate que el contexto sea la carpeta frontend
+            ./frontend # Asume que el contexto es la carpeta frontend/ desde la raíz del repo
 
-      # Subir imagen
-      - name: Push Docker image
+      # Subir la imagen
+      - name: Push Docker image (Frontend)
         run: |
           docker push ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
 
-      # Desplegar a Cloud Run pasando el SECRETO VITE_API_URL a la variable de entorno PYTHON_API_URL
-      - name: Deploy to Cloud Run
+      # Desplegar a Cloud Run pasando la variable de entorno correcta
+      - name: Deploy Frontend to Cloud Run
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v1
         with:
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.REGION }}
           image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
-          env_vars: |-
-            PYTHON_API_URL=${{ secrets.VITE_API_URL }} # <-- Usa tu secreto VITE_API_URL
+          env_vars: |- # Define las variables de entorno para el contenedor
+            PYTHON_API_URL=${{ secrets.PYTHON_API_URL }} # <-- CORREGIDO: Lee el secreto PYTHON_API_URL
             PORT=8080
             NODE_ENV=production
-          flags: --allow-unauthenticated
+          flags: --allow-unauthenticated # O tus flags necesarios
 
       - name: Show Deployed URL
-        run: echo "Service deployed to ${{ steps.deploy.outputs.url }}"
+        run: echo "Frontend Service deployed to ${{ steps.deploy.outputs.url }}"
