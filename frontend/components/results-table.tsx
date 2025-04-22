@@ -1,20 +1,19 @@
-"use client"
-import { formatCurrency } from "@/lib/utils"
+// components/results-table.tsx
+"use client";
+
+import { formatCurrency } from "@/lib/utils";
 
 interface ResultsTableProps {
-  results: any[]
+  results: any[];
 }
 
 export function ResultsTable({ results }: ResultsTableProps) {
-  // Función para extraer datos aplanados de cada resultado
-  const flattenResult = (result: any) => {
-    const extractedData = result.extracted_data || {}
-
-    // Manejar caso de error
-    if (extractedData.error) {
+  const flattenResult = (res: any) => {
+    const d = res.extracted_data || {};
+    if (d.error) {
       return {
-        filename: result.filename || "Desconocido",
-        error: extractedData.error,
+        filename: res.filename || "Desconocido",
+        error: d.error,
         fecha: null,
         origen: null,
         destino: null,
@@ -22,61 +21,57 @@ export function ResultsTable({ results }: ResultsTableProps) {
         monto: null,
         estado: null,
         codigo: null,
-      }
+      };
     }
-
-    const remitente = extractedData.remitente || {}
-    const destinatario = extractedData.destinatario || {}
-
+    const r = d.remitente || {};
+    const t = d.destinatario || {};
     return {
-      filename: result.filename || "Desconocido",
+      filename: res.filename || "Desconocido",
       error: null,
-      fecha: `${extractedData.fecha || ""} ${extractedData.hora || ""}`.trim() || null,
-      origen: remitente.nombre || extractedData.banco_origen_app || remitente.banco || remitente.rut || null,
-      destino: destinatario.nombre || destinatario.banco || destinatario.rut || null,
-      asunto: extractedData.asunto || null,
-      monto: extractedData.monto,
-      estado: extractedData.estado || null,
-      codigo: extractedData.codigo_transaccion || null,
-    }
-  }
+      fecha: `${d.fecha||""} ${d.hora||""}`.trim() || null,
+      origen: r.nombre || d.banco_origen_app || r.banco || r.rut || null,
+      destino: t.nombre || t.banco || t.rut || null,
+      asunto: d.asunto || null,
+      monto: d.monto,
+      estado: d.estado || null,
+      codigo: d.codigo_transaccion || null,
+    };
+  };
 
-  const flattenedResults = results.map(flattenResult)
+  const items = results.map(flattenResult);
 
   return (
-    <div className="overflow-x-auto">
+    <div className="bg-white rounded-lg shadow overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200 text-gray-900">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Archivo</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Fecha y Hora
-            </th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Origen</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Destino</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asunto</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+        <thead className="bg-white">
+          <tr className="uppercase text-xs font-medium text-gray-500 tracking-wide">
+            <th className="px-4 py-3 text-left">Archivo</th>
+            <th className="px-4 py-3 text-left">Fecha y Hora</th>
+            <th className="px-4 py-3 text-left">Origen</th>
+            <th className="px-4 py-3 text-left">Destino</th>
+            <th className="px-4 py-3 text-left">Asunto</th>
+            <th className="px-4 py-3 text-left">Monto</th>
+            <th className="px-4 py-3 text-left">Estado</th>
+            <th className="px-4 py-3 text-left">Código</th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {flattenedResults.map((item, index) => (
-            <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-              <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">{item.filename}</td>
+        <tbody className="divide-y divide-gray-200">
+          {items.map((it, idx) => (
+            <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+              <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">{it.filename}</td>
               <td className="px-4 py-2 whitespace-nowrap text-sm">
-                {item.error ? <span className="text-red-500">Error: {item.error}</span> : item.fecha}
+                {it.error ? <span className="text-red-500">Error: {it.error}</span> : it.fecha}
               </td>
-              <td className="px-4 py-2 whitespace-nowrap text-sm">{item.origen}</td>
-              <td className="px-4 py-2 whitespace-nowrap text-sm">{item.destino}</td>
-              <td className="px-4 py-2 whitespace-nowrap text-sm">{item.asunto}</td>
-              <td className="px-4 py-2 whitespace-nowrap text-sm">{item.monto ? formatCurrency(item.monto) : null}</td>
-              <td className="px-4 py-2 whitespace-nowrap text-sm">{item.estado}</td>
-              <td className="px-4 py-2 whitespace-nowrap text-sm">{item.codigo}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-sm">{it.origen}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-sm">{it.destino}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-sm">{it.asunto}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-sm">{it.monto != null ? formatCurrency(it.monto) : ""}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-sm">{it.estado}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-sm">{it.codigo}</td>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
-  )
+  );
 }

@@ -1,57 +1,62 @@
-import { type NextRequest, NextResponse } from "next/server";
+// app/api/extract-multi/route.ts
+export const runtime = 'nodejs';
+
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   console.log("--- /api/extract-multi INICIADO ---");
+
+  const pythonApiUrl =
+    process.env.PYTHON_API_URL
+    ?? "https://api-551745267811.us-central1.run.app";
+
+  console.log("PYTHON_API_URL =", pythonApiUrl);
+
   try {
     const formData = await req.formData();
     console.log("FormData recibido en /api/extract-multi");
     const files = formData.getAll("files") as File[];
 
-    if (!files || files.length === 0 || !files.every(file => file instanceof File)) {
-       console.error("Error en /api/extract-multi: Archivos inválidos o no proporcionados.");
-       return NextResponse.json({ error: "Archivos inválidos o no proporcionados" }, { status: 400 });
+    if (!files.length || !files.every(f => f instanceof File)) {
+      console.error("Error en /api/extract-multi: archivos inválidos.");
+      return NextResponse.json(
+        { error: "Archivos inválidos o no proporcionados" },
+        { status: 400 }
+      );
     }
     if (files.length > 10) {
-        console.error("Error en /api/extract-multi: Demasiados archivos.");
-        return NextResponse.json({ error: "Máximo 10 archivos permitidos" }, { status: 400 });
-    }
-    console.log(`Archivos recibidos: ${files.length}`);
-
-    const apiFormData = new FormData();
-    files.forEach((file, index) => {
-      apiFormData.append("files", file, file.name || `file_${index}`);
-    });
-
-    const apiBaseUrl = process.env.PYTHON_API_URL || "http://localhost:8000";
-    const apiUrl = `${apiBaseUrl}/extract_multi`;
-
-    console.log(`Intentando fetch a API Python (extract-multi): ${apiUrl} con ${files.length} archivos`);
-
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      body: apiFormData,
-      // signal: AbortSignal.timeout(60000) // Considera timeout más largo
-    });
-
-    console.log(`Respuesta recibida de API Python (extract-multi): Status ${response.status}`);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Error desde API Python (${apiUrl}): ${response.status} - ${errorText}`);
+      console.error("Error en /api/extract-multi: demasiados archivos.");
       return NextResponse.json(
-         { error: `Error al procesar en el servidor backend [${response.status}]` },
-         { status: response.status }
+        { error: "Máximo 10 archivos permitidos" },
+        { status: 400 }
       );
     }
 
-    const data = await response.json();
-    console.log(`Respuesta JSON OK de API Python (extract-multi)`);
-    return NextResponse.json(data);
+    const proxyForm = new FormData();
+    files.forEach((file, i) => proxyForm.append("files", file, file.name || `file_${i}`));
 
-  } catch (error) {
-    console.error("Error CATCH en /api/extract-multi:", error);
+    const apiUrl = `${pythonApiUrl}/extract_multi`;
+    console.log(`Fetch a Python API (extract-multi): ${apiUrl} con ${files.length} archivos`);
+
+    const res = await fetch(apiUrl, { method: "POST", body: proxyForm });
+    console.log("Respuesta de backend Python (extract-multi):", res.status);
+
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error(`Error desde Python [${res.status}]:`, txt);
+      return NextResponse.json(
+        { error: `Error del backend: ${txt}` },
+        { status: res.status }
+      );
+    }
+
+    const json = await res.json();
+    return NextResponse.json(json);
+
+  } catch (err) {
+    console.error("Error CATCH en /api/extract-multi:", err);
     return NextResponse.json(
-      { error: `Error interno del servidor en API Route: ${error instanceof Error ? error.message : String(error)}` },
+      { error: `Error interno en API Route: ${err instanceof Error ? err.message : String(err)}` },
       { status: 500 }
     );
   }
