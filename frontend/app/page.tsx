@@ -1,3 +1,4 @@
+// app/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -98,7 +99,7 @@ export default function Home() {
 
       const data = await response.json();
       setResults(requiresMulti ? (data.results || []) : [data]);
-      if ((requiresMulti && data.results?.length > 0) || (!requiresMulti && data && !data.error)) { // Chequea si hay datos y no es error
+      if ((requiresMulti && data.results?.length > 0) || (!requiresMulti && data && !data.error)) {
           setShowTable(true);
       }
 
@@ -115,19 +116,19 @@ export default function Home() {
     if (results.length === 0) { alert("No hay resultados para exportar."); return; }
     try {
       const formData = new FormData();
-      const formattedResults = results.map((item, index) => { // Añadido index
+      const formattedResults = results.map((item, index) => {
           if (item && item.filename && item.extracted_data) {
               return item;
-          } else if (item && !item.filename && typeof item === 'object' && !item.error) { // Asegura que item sea objeto y no error
-               const originalFile = files[index]; // Usa el índice para encontrar el archivo
+          } else if (item && !item.filename && typeof item === 'object' && !item.error) {
+               const originalFile = files[index];
                return { filename: originalFile?.name || `resultado_${index + 1}`, extracted_data: item };
           } else {
-               return { filename: item?.filename || `error_${index + 1}`, extracted_data: { error: item?.extracted_data?.error || "Formato desconocido" } }; // Mejora manejo error
+               return { filename: item?.filename || `error_${index + 1}`, extracted_data: { error: item?.extracted_data?.error || "Formato desconocido" } };
           }
       });
       formData.append("extracted_results", JSON.stringify({ results: formattedResults }));
 
-      const apiUrl = `${ASSET_PREFIX}/api/export`; // Construir URL completa
+      const apiUrl = `${ASSET_PREFIX}/api/export`;
 
       const response = await fetch(apiUrl, { method: "POST", body: formData });
       if (!response.ok) {
