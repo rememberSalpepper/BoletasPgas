@@ -19,37 +19,35 @@ export default function Home() {
   const [showTable, setShowTable] = useState(false);
 
   useEffect(() => {
-    return () => previews.forEach((url) => URL.revokeObjectURL(url));
+    return () => previews.forEach(u => URL.revokeObjectURL(u));
   }, [previews]);
 
   const handleFilesSelected = (selectedFiles: File[]) => {
-    if (selectedFiles.length === 0) return;
+    if (!selectedFiles.length) return;
     if (selectedFiles.length + files.length > 10) {
       alert("Máximo 10 boletas.");
       return;
     }
-    const cf = [...files];
-    const cp = [...previews];
-    const added: File[] = [];
-    const mapP: Record<string, string> = {};
+    const cf = [...files], cp = [...previews];
+    const added: File[] = [], mapP: Record<string,string> = {};
 
-    selectedFiles.forEach((f) => {
+    selectedFiles.forEach(f => {
       const key = `${f.name}-${f.size}`;
-      if (!cf.some((x) => `${x.name}-${x.size}` === key)) {
+      if (!cf.some(x => `${x.name}-${x.size}` === key)) {
         added.push(f);
         mapP[key] = URL.createObjectURL(f);
       }
     });
 
     const finalFiles = [...cf, ...added];
-    const finalPreviews = finalFiles.map((f) => {
+    const finalPreviews = finalFiles.map(f => {
       const key = `${f.name}-${f.size}`;
-      const exist = cp.find((p, i) => `${cf[i]?.name}-${cf[i]?.size}` === key);
+      const exist = cp.find((p,i) => `${cf[i]?.name}-${cf[i]?.size}` === key);
       return exist || mapP[key];
     });
 
-    cp.forEach((u, i) => {
-      if (cf[i] && !finalFiles.some((f) => f.name === cf[i].name && f.size === cf[i].size)) {
+    cp.forEach((u,i) => {
+      if (cf[i] && !finalFiles.some(f => f.name===cf[i].name && f.size===cf[i].size)) {
         URL.revokeObjectURL(u);
       }
     });
@@ -59,11 +57,9 @@ export default function Home() {
   };
 
   const handleRemoveBoleta = (idx: number) => {
-    const nf = [...files];
-    const np = [...previews];
+    const nf = [...files], np = [...previews];
     if (np[idx]) URL.revokeObjectURL(np[idx]);
-    nf.splice(idx, 1);
-    np.splice(idx, 1);
+    nf.splice(idx,1); np.splice(idx,1);
     setFiles(nf);
     setPreviews(np);
     if (!nf.length) {
@@ -81,29 +77,20 @@ export default function Home() {
       const fd = new FormData();
       const multi = files.length > 1;
       const urlPath = multi ? "extract-multi" : "extract";
+      if (multi) files.forEach(f => fd.append("files", f));
+      else fd.append("file", files[0]);
 
-      if (multi) {
-        files.forEach((f) => fd.append("files", f));
-      } else {
-        fd.append("file", files[0]);
-      }
-
-      const res = await fetch(`${ASSET_PREFIX}/api/${urlPath}`, {
-        method: "POST",
-        body: fd,
-      });
-
+      const res = await fetch(`${ASSET_PREFIX}/api/${urlPath}`, { method: "POST", body: fd });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: `Error ${res.status}` }));
         throw new Error(err.error);
       }
-
       const json = await res.json();
       const out = multi ? (json.results || []) : [json];
+
       setResults(out);
-      if (out.length && !out[0].error) {
-        setShowTable(true);
-      }
+      // Aquí la integración que pedías:
+      setShowTable(true);
     } catch (e) {
       console.error("Error scanning files:", e);
       alert(`Error al procesar las boletas: ${e instanceof Error ? e.message : String(e)}`);
@@ -120,22 +107,16 @@ export default function Home() {
     }
     try {
       const fd = new FormData();
-      const formatted = results.map((item, i) => {
+      const formatted = results.map((item,i) => {
         if (item.filename && item.extracted_data) return item;
         if (typeof item === "object" && !item.error) {
-          return { filename: files[i]?.name || `resultado_${i + 1}`, extracted_data: item };
+          return { filename: files[i]?.name||`resultado_${i+1}`, extracted_data: item };
         }
-        return {
-          filename: item.filename || `error_${i + 1}`,
-          extracted_data: { error: item.error || "Formato desconocido" },
-        };
+        return { filename: item.filename||`error_${i+1}`, extracted_data: { error: item.error||"Formato desconocido" } };
       });
       fd.append("extracted_results", JSON.stringify({ results: formatted }));
 
-      const res = await fetch(`${ASSET_PREFIX}/api/export`, {
-        method: "POST",
-        body: fd,
-      });
+      const res = await fetch(`${ASSET_PREFIX}/api/export`, { method: "POST", body: fd });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: `Error ${res.status}` }));
         throw new Error(err.error);
@@ -143,11 +124,8 @@ export default function Home() {
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      a.download = "extraccion_comprobantes.xlsx";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      a.href = url; a.download = "extraccion_comprobantes.xlsx";
+      document.body.appendChild(a); a.click(); a.remove();
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error("Error exporting:", e);
@@ -162,13 +140,8 @@ export default function Home() {
       <Particles className="fixed inset-0 -z-10" quantity={100} />
 
       <div className="min-h-screen w-full flex flex-col items-center justify-center pt-20 pb-10 px-4 space-y-6 text-white">
-        {/* --- Header y uploader --- */}
-        <motion.div
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, type: "spring", bounce: 0.3 }}
-          className="text-center"
-        >
+        {/* Header + uploader */}
+        <motion.div initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, type: "spring", bounce: 0.3 }} className="text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold drop-shadow-lg">
             Extracción de Boletas
           </h1>
@@ -177,139 +150,81 @@ export default function Home() {
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-md flex flex-col items-center"
-        >
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.2 }} className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-md flex flex-col items-center">
           <div className="flex items-center justify-center mb-4 gap-3">
-            <NextImage
-              src={`${ASSET_PREFIX}/images/logo.png`}
-              alt="Logo"
-              width={40}
-              height={40}
-              className="h-8 w-8 object-contain"
-            />
+            <NextImage src={`${ASSET_PREFIX}/images/logo.png`} alt="Logo" width={40} height={40} className="h-8 w-8 object-contain" />
             <label className="text-base sm:text-lg font-medium text-gray-900">
               Sube tus boletas (máx. 10)
             </label>
           </div>
-
           <FileUploader onFilesSelected={handleFilesSelected} />
-
-          <button
-            onClick={handleExtract}
-            disabled={isLoading || !files.length}
+          <button onClick={handleExtract} disabled={isLoading || !files.length}
             className="mt-5 w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-3 rounded-lg shadow transform transition duration-300 hover:scale-105 disabled:opacity-50"
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Extrayendo...
-              </>
-            ) : (
-              <>
-                <FileText className="mr-2 h-5 w-5" />
-                Extraer Datos
-              </>
-            )}
+            {isLoading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin"/>Extrayendo...</> : <><FileText className="mr-2 h-5 w-5"/>Extraer Datos</>}
           </button>
         </motion.div>
 
-        {/* --- Previews --- */}
-        <motion.div
-          variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
-          initial="hidden"
-          animate="visible"
+        {/* Previews */}
+        <motion.div variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } }} initial="hidden" animate="visible"
           className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 w-full max-w-5xl"
         >
           {previews.map((src, i) => (
-            <motion.div
-              key={i}
-              variants={{ hidden: { y: 10, opacity: 0 }, visible: { y: 0, opacity: 1 } }}
-              className="relative aspect-w-4 aspect-h-3 group"
-            >
-              <img
-                src={src}
-                alt={`Boleta ${i + 1}`}
-                loading="lazy"
+            <motion.div key={i} variants={{ hidden: { y: 10, opacity: 0 }, visible: { y: 0, opacity: 1 } }} className="relative aspect-w-4 aspect-h-3 group">
+              <img src={src} alt={`Boleta ${i+1}`} loading="lazy"
                 className="w-full h-full object-cover rounded-xl shadow-lg border-2 border-white/20"
               />
               <div className="absolute bottom-1.5 left-1.5 bg-black bg-opacity-70 text-white text-[10px] px-1.5 py-0.5 rounded-full">
-                {files[i]?.name.length > 15
-                  ? files[i].name.substring(0, 12) + "..."
-                  : files[i].name}
+                {files[i]?.name.length > 15 ? files[i].name.substring(0,12)+"..." : files[i].name}
               </div>
-              <button
-                onClick={() => handleRemoveBoleta(i)}
+              <button onClick={() => handleRemoveBoleta(i)}
                 className="absolute top-1.5 right-1.5 bg-red-600/70 text-white w-6 h-6 rounded-full opacity-0 group-hover:opacity-100"
-              >
-                ✕
-              </button>
+              >✕</button>
             </motion.div>
           ))}
         </motion.div>
 
-        {/* --- Panel de resultados --- */}
-        {results.length > 0 && (
-          <div className="relative z-20 w-full max-w-7xl mx-auto">
-            {/* Header azul */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, type: "spring" }}
-              className="bg-blue-50 rounded-t-2xl px-6 py-4"
-            >
-              <h2 className="text-2xl font-bold text-gray-900">Resultados Extraídos</h2>
-            </motion.div>
-
-            {/* Tabla + botones en contenedor scrollable */}
-            {showTable && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, type: "spring", delay: 0.1 }}
-                className="bg-white rounded-b-2xl shadow-lg overflow-x-auto"
-              >
-                <div className="p-6 min-w-[800px]">
-                  <ResultsTable results={results} />
-
-                  <div className="mt-4 flex justify-end space-x-3">
-                    <button
-                      onClick={() => setShowTable(false)}
-                      className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-1 px-3 rounded"
-                    >
-                      Ocultar tabla
-                    </button>
-                    <button
-                      onClick={handleExport}
-                      className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg"
-                    >
-                      Exportar a Excel
-                    </button>
-                  </div>
+        {/* Aquí integramos tus mejoras visuales */}
+        {results.length > 0 && showTable && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, type: "spring" }}
+            className="relative z-10 w-full max-w-7xl mx-auto"
+          >
+            <div className="bg-white rounded-xl shadow-lg p-6 overflow-hidden">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Resultados Extraídos</h2>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setShowTable(false)}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-1 px-3 rounded"
+                  >
+                    Ocultar tabla
+                  </button>
+                  <button
+                    onClick={handleExport}
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium py-2 px-4 rounded-lg shadow transform transition duration-200 hover:scale-105"
+                  >
+                    Exportar a Excel
+                  </button>
                 </div>
-              </motion.div>
-            )}
+              </div>
+              <ResultsTable results={results} />
+            </div>
+          </motion.div>
+        )}
 
-            {/* Botón “Mostrar tabla” */}
-            {!showTable && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3, type: "spring" }}
-                className="mt-4 flex justify-center"
-              >
-                <button
-                  onClick={() => setShowTable(true)}
-                  className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-2 px-6 rounded-lg shadow"
-                >
-                  Mostrar tabla
-                </button>
-              </motion.div>
-            )}
-          </div>
+        {!showTable && results.length > 0 && (
+          <motion.button
+            onClick={() => setShowTable(true)}
+            className="relative z-10 mt-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-2 px-6 rounded-lg shadow"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3, type: "spring" }}
+          >
+            Mostrar tabla
+          </motion.button>
         )}
       </div>
     </>
