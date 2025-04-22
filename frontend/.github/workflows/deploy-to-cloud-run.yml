@@ -44,7 +44,7 @@ jobs:
       - name: Build Docker image (Frontend)
         run: |
           docker build \
-            --build-arg PYTHON_API_URL=${{ secrets.PYTHON_API_URL }} \ # <-- CORREGIDO: Lee el secreto PYTHON_API_URL
+            --build-arg PYTHON_API_URL=${{ secrets.PYTHON_API_URL }} \ 
             -t ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
             ./frontend # Asume que el contexto es la carpeta frontend/ desde la raíz del repo
 
