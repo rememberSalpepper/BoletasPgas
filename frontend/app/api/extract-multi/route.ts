@@ -1,8 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
+  console.log("--- /api/extract-multi INICIADO ---");
   try {
     const formData = await req.formData();
+    console.log("FormData recibido en /api/extract-multi");
     const files = formData.getAll("files") as File[];
 
     if (!files || files.length === 0 || !files.every(file => file instanceof File)) {
@@ -13,6 +15,7 @@ export async function POST(req: NextRequest) {
         console.error("Error en /api/extract-multi: Demasiados archivos.");
         return NextResponse.json({ error: "Máximo 10 archivos permitidos" }, { status: 400 });
     }
+    console.log(`Archivos recibidos: ${files.length}`);
 
     const apiFormData = new FormData();
     files.forEach((file, index) => {
@@ -22,12 +25,15 @@ export async function POST(req: NextRequest) {
     const apiBaseUrl = process.env.PYTHON_API_URL || "http://localhost:8000";
     const apiUrl = `${apiBaseUrl}/extract_multi`;
 
-    console.log(`Enviando a API Python (extract-multi): ${apiUrl} con ${files.length} archivos`);
+    console.log(`Intentando fetch a API Python (extract-multi): ${apiUrl} con ${files.length} archivos`);
 
     const response = await fetch(apiUrl, {
       method: "POST",
       body: apiFormData,
+      // signal: AbortSignal.timeout(60000) // Considera timeout más largo
     });
+
+    console.log(`Respuesta recibida de API Python (extract-multi): Status ${response.status}`);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -39,13 +45,13 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await response.json();
-    console.log(`Respuesta OK de API Python (extract-multi)`);
+    console.log(`Respuesta JSON OK de API Python (extract-multi)`);
     return NextResponse.json(data);
 
   } catch (error) {
-    console.error("Error inesperado en /api/extract-multi:", error);
+    console.error("Error CATCH en /api/extract-multi:", error);
     return NextResponse.json(
-      { error: `Error interno del servidor.` },
+      { error: `Error interno del servidor en API Route: ${error instanceof Error ? error.message : String(error)}` },
       { status: 500 }
     );
   }
