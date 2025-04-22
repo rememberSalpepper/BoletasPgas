@@ -62,7 +62,7 @@ jobs:
           region: ${{ env.REGION }}
           image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
           env_vars: |- # Define las variables de entorno para el contenedor ()anajo()
-            PYTHON_API_URL=${{ secrets.PYTHON_API_URL }}
+            PYTHON_API_URL=https://api-551745267811.us-central1.run.app
             PORT=8080
             NODE_ENV=production
           flags: --allow-unauthenticated # O tus flags necesarios
