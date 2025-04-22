@@ -1,8 +1,4 @@
-# .github/workflows/deploy-frontend.yml
-# Despliega el frontend Next.js a Cloud Run
-# SIN build-arg para PYTHON_API_URL, CON env_var en deploy
-
-name: Deploy Frontend (Next.js) to Cloud Run
+name: Deploy Frontend (Next.js) to Cloud Run (DEBUG URL)
 
 on:
   push:
@@ -11,32 +7,26 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCLOUD_PROJECT }}
-  GAR_LOCATION: us-central1                # O tu región de Artifact Registry
-  SERVICE_NAME: frontend                   # Nombre del servicio Frontend en Cloud Run
-  REGION: us-central1                      # Región de Cloud Run
-  # Nombre EXACTO del secreto en GitHub Actions que contiene la URL de la API Python
-  API_PYTHON_SECRET_NAME: PYTHON_API_URL
+  GAR_LOCATION: us-central1
+  SERVICE_NAME: frontend
+  REGION: us-central1
+  # No necesitamos variable para nombre de secreto aquí
 
 jobs:
   build-and-deploy-frontend:
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
-      id-token: 'write' # Para autenticación WIF (si la usas)
+      id-token: 'write'
 
     steps:
       - name: Checkout Frontend repository code
         uses: actions/checkout@v3
 
-      # --- Autenticación: Usa tu método configurado ---
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }} # Usa tu secreto de credenciales JSON
-          # O si usas WIF:
-          # workload_identity_provider: 'projects/...'
-          # service_account: '...'
-      # ---------------------------------------------
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }} # O tu WIF
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
@@ -46,19 +36,19 @@ jobs:
       - name: Configure Docker
         run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev --quiet
 
-      # Construir la imagen Docker SIN pasar el build-arg para la API URL
+      # Construir imagen SIN build-arg para la URL de la API
       - name: Build Docker image (Frontend)
         run: |
           docker build \
             -t ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
-            ./frontend # Asume que el contexto es la carpeta frontend/ desde la raíz del repo
+            ./frontend # Asume contexto frontend/
 
-      # Subir la imagen
+      # Subir imagen
       - name: Push Docker image (Frontend)
         run: |
           docker push ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
 
-      # Desplegar a Cloud Run pasando la variable de entorno SÓLO para runtime
+      # Desplegar a Cloud Run con URL HARDCODED en env_vars (SOLO PARA DEBUG)
       - name: Deploy Frontend to Cloud Run
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v1
@@ -66,13 +56,13 @@ jobs:
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.REGION }}
           image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
-          # ---> Pasar la variable de entorno PYTHON_API_URL usando el secreto <---
+          # --- URL Hardcodeada ---
           env_vars: |-
-            PYTHON_API_URL=${{ secrets[env.API_PYTHON_SECRET_NAME] }}
+            PYTHON_API_URL=https://api-551745267811.us-central1.run.app
             PORT=8080
             NODE_ENV=production
-          # --------------------------------------------------------------------
-          flags: --allow-unauthenticated # O tus flags necesarios
+          # ----------------------
+          flags: --allow-unauthenticated
 
       - name: Show Deployed URL
         run: echo "Frontend Service deployed to ${{ steps.deploy.outputs.url }}"
