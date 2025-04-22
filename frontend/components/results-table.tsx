@@ -97,7 +97,7 @@ export function ResultsTable({ results }: ResultsTableProps) {
     return "bg-blue-100 text-blue-800 border-blue-300";
   };
 
-  // Versión móvil
+  // Versión móvil simplificada
   const renderMobileTable = () => (
     <div className="block md:hidden">
       {items.length === 0 ? (
@@ -106,20 +106,20 @@ export function ResultsTable({ results }: ResultsTableProps) {
           <p>No hay resultados disponibles</p>
         </div>
       ) : (
-        <div className="space-y-4 px-3">
+        <div className="space-y-4 px-3 py-3">
           {items.map((item, idx) => (
             <motion.div
               key={idx}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: idx * 0.05 }}
-              className={`p-4 rounded-lg shadow-sm ${item.error ? "bg-red-50" : "bg-white"}`}
+              className="p-4 rounded-lg shadow-sm bg-white"
             >
-              <div className="flex items-center mb-2">
-                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                  <FileText className="h-4 w-4 text-blue-500" />
+              <div className="flex items-center mb-3">
+                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                  <FileText className="h-5 w-5 text-blue-500" />
                 </div>
-                <span className="font-medium text-gray-900">{item.filename}</span>
+                <span className="font-medium text-gray-900 text-base">{item.filename}</span>
               </div>
               
               {item.error ? (
@@ -128,48 +128,46 @@ export function ResultsTable({ results }: ResultsTableProps) {
                   <span>Error: {item.error}</span>
                 </div>
               ) : (
-                <>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <p className="text-gray-500 text-xs">Fecha</p>
-                      <p className="font-medium">{item.fecha || "-"}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-xs">Monto</p>
-                      <p className="font-bold">
-                        {item.monto != null ? formatCurrency(item.monto) : "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-xs">Origen</p>
-                      <p className="font-medium">{item.origen}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-xs">Destino</p>
-                      <p>{item.destino}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-xs">Estado</p>
-                      <Badge
-                        variant="outline"
-                        className={`${getStatusColor(item.estado)} text-xs px-2 py-0.5 rounded-full inline-flex items-center mt-1`}
-                      >
-                        {item.estado.toLowerCase().includes("exit") && <CheckCircle className="h-3 w-3 mr-1" />}
-                        {item.estado}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-xs">Código</p>
-                      <p className="font-mono">{item.codigo}</p>
-                    </div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                  <div>
+                    <p className="text-gray-500 text-xs mb-1">Fecha</p>
+                    <p className="font-medium text-gray-800">{item.fecha}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-xs mb-1">Monto</p>
+                    <p className="font-bold text-gray-900">
+                      {item.monto != null ? formatCurrency(item.monto) : "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-xs mb-1">Origen</p>
+                    <p className="font-medium text-gray-800">{item.origen}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-xs mb-1">Destino</p>
+                    <p className="text-gray-800">{item.destino}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-xs mb-1">Estado</p>
+                    <Badge
+                      variant="outline"
+                      className={`${getStatusColor(item.estado)} text-xs px-2 py-0.5 rounded-full inline-flex items-center`}
+                    >
+                      {item.estado.toLowerCase().includes("exit") && <CheckCircle className="h-3 w-3 mr-1" />}
+                      {item.estado}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-xs mb-1">Código</p>
+                    <p className="font-mono text-gray-800">{item.codigo}</p>
                   </div>
                   {item.asunto && item.asunto !== "-" && (
-                    <div className="mt-2">
-                      <p className="text-gray-500 text-xs">Asunto</p>
-                      <p className="text-sm">{item.asunto}</p>
+                    <div className="col-span-2 mt-1">
+                      <p className="text-gray-500 text-xs mb-1">Asunto</p>
+                      <p className="text-gray-800">{item.asunto}</p>
                     </div>
                   )}
-                </>
+                </div>
               )}
             </motion.div>
           ))}
