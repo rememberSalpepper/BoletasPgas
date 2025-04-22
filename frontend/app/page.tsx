@@ -6,7 +6,9 @@ import { Particles } from "@/components/particles";
 import { FileUploader } from "@/components/file-uploader";
 import { ResultsTable } from "@/components/results-table";
 import { Loader2, FileText } from "lucide-react";
-import NextImage from "next/image"; // Renombrado para evitar conflicto con <img>
+import NextImage from "next/image";
+
+const ASSET_PREFIX = '/pgapps/boletas';
 
 export default function Home() {
   const [files, setFiles] = useState<File[]>([]);
@@ -76,15 +78,15 @@ export default function Home() {
     setShowTable(false);
     try {
       const formData = new FormData();
-      let apiUrl = "";
       let requiresMulti = files.length > 1;
+      let apiUrl = requiresMulti
+                 ? `${ASSET_PREFIX}/api/extract-multi`
+                 : `${ASSET_PREFIX}/api/extract`;
 
       if (requiresMulti) {
         files.forEach((file) => formData.append("files", file));
-        apiUrl = "/api/extract-multi"; // Llamada relativa a la raíz
       } else {
         formData.append("file", files[0]);
-        apiUrl = "/api/extract"; // Llamada relativa a la raíz
       }
 
       const response = await fetch(apiUrl, { method: "POST", body: formData });
@@ -96,7 +98,7 @@ export default function Home() {
 
       const data = await response.json();
       setResults(requiresMulti ? (data.results || []) : [data]);
-      if ((requiresMulti && data.results?.length > 0) || (!requiresMulti && data)) {
+      if ((requiresMulti && data.results?.length > 0) || (!requiresMulti && data && !data.error)) { // Chequea si hay datos y no es error
           setShowTable(true);
       }
 
@@ -113,18 +115,21 @@ export default function Home() {
     if (results.length === 0) { alert("No hay resultados para exportar."); return; }
     try {
       const formData = new FormData();
-      const formattedResults = results.map(item => {
+      const formattedResults = results.map((item, index) => { // Añadido index
           if (item && item.filename && item.extracted_data) {
               return item;
-          } else if (item && !item.filename && !item.error) {
-               const originalFile = files.find((f, i) => i === results.indexOf(item));
-               return { filename: originalFile?.name || `resultado_${results.indexOf(item) + 1}`, extracted_data: item };
+          } else if (item && !item.filename && typeof item === 'object' && !item.error) { // Asegura que item sea objeto y no error
+               const originalFile = files[index]; // Usa el índice para encontrar el archivo
+               return { filename: originalFile?.name || `resultado_${index + 1}`, extracted_data: item };
           } else {
-               return { filename: item?.filename || `error_${results.indexOf(item) + 1}`, extracted_data: { error: item?.error || "Formato desconocido" } };
+               return { filename: item?.filename || `error_${index + 1}`, extracted_data: { error: item?.extracted_data?.error || "Formato desconocido" } }; // Mejora manejo error
           }
       });
       formData.append("extracted_results", JSON.stringify({ results: formattedResults }));
-      const response = await fetch("/api/export", { method: "POST", body: formData }); // Llamada relativa a la raíz
+
+      const apiUrl = `${ASSET_PREFIX}/api/export`; // Construir URL completa
+
+      const response = await fetch(apiUrl, { method: "POST", body: formData });
       if (!response.ok) {
          const errorData = await response.json().catch(() => ({ error: `Error HTTP ${response.status}` }));
         throw new Error(errorData.error || `Error: ${response.status}`);
@@ -169,7 +174,7 @@ export default function Home() {
         >
           <div className="flex items-center justify-center mb-4 gap-3">
             <NextImage
-              src="/images/logo.png" // Ruta relativa a /public
+              src={`${ASSET_PREFIX}/images/logo.png`}
               alt="Logo"
               width={40} height={40}
               className="h-8 w-8 sm:h-10 sm:w-10 object-contain"
