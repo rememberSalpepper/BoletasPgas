@@ -19,9 +19,7 @@ export default function Home() {
   const [showTable, setShowTable] = useState(false);
 
   useEffect(() => {
-    return () => {
-      previews.forEach((url) => URL.revokeObjectURL(url));
-    };
+    return () => previews.forEach((url) => URL.revokeObjectURL(url));
   }, [previews]);
 
   const handleFilesSelected = (selectedFiles: File[]) => {
@@ -103,7 +101,9 @@ export default function Home() {
       const json = await res.json();
       const out = multi ? (json.results || []) : [json];
       setResults(out);
-      if (out.length && !out[0].error) setShowTable(true);
+      if (out.length && !out[0].error) {
+        setShowTable(true);
+      }
     } catch (e) {
       console.error("Error scanning files:", e);
       alert(`Error al procesar las boletas: ${e instanceof Error ? e.message : String(e)}`);
@@ -225,7 +225,11 @@ export default function Home() {
           className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 w-full max-w-5xl"
         >
           {previews.map((src, i) => (
-            <motion.div key={i} variants={{ hidden: { y: 10, opacity: 0 }, visible: { y: 0, opacity: 1 } }} className="relative aspect-w-4 aspect-h-3 group">
+            <motion.div
+              key={i}
+              variants={{ hidden: { y: 10, opacity: 0 }, visible: { y: 0, opacity: 1 } }}
+              className="relative aspect-w-4 aspect-h-3 group"
+            >
               <img
                 src={src}
                 alt={`Boleta ${i + 1}`}
@@ -233,10 +237,12 @@ export default function Home() {
                 className="w-full h-full object-cover rounded-xl shadow-lg border-2 border-white/20"
               />
               <div className="absolute bottom-1.5 left-1.5 bg-black bg-opacity-70 text-white text-[10px] px-1.5 py-0.5 rounded-full">
-                {files[i]?.name.length > 15 ? files[i].name.substring(0, 12) + "..." : files[i].name}
+                {files[i]?.name.length > 15
+                  ? files[i].name.substring(0, 12) + "..."
+                  : files[i].name}
               </div>
               <button
-                onClick={() => handleRemoveBoleta(i)} 
+                onClick={() => handleRemoveBoleta(i)}
                 className="absolute top-1.5 right-1.5 bg-red-600/70 text-white w-6 h-6 rounded-full opacity-0 group-hover:opacity-100"
               >
                 ✕
@@ -248,7 +254,7 @@ export default function Home() {
         {/* --- Panel de resultados --- */}
         {results.length > 0 && (
           <div className="relative z-20 w-full max-w-7xl mx-auto">
-            {/* Header */}
+            {/* Header azul */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -258,7 +264,7 @@ export default function Home() {
               <h2 className="text-2xl font-bold text-gray-900">Resultados Extraídos</h2>
             </motion.div>
 
-            {/* Tabla + botones */}
+            {/* Tabla + botones en contenedor scrollable */}
             {showTable && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -287,7 +293,7 @@ export default function Home() {
               </motion.div>
             )}
 
-            {/* Mostrar tabla */}
+            {/* Botón “Mostrar tabla” */}
             {!showTable && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
