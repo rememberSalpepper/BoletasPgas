@@ -1,6 +1,3 @@
-// app/api/extract/route.ts
-
-// Fuerza Node.js runtime (no Edge), donde sí están disponibles todas las env vars
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from "next/server";

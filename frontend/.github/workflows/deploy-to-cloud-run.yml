@@ -1,16 +1,16 @@
-name: Deploy Frontend (Next.js) to Cloud Run (DEBUG URL)
+name: Deploy Frontend (Next.js) to Cloud Run
 
 on:
   push:
     branches:
-      - main # O la rama donde está el código del frontend
+      - main
 
 env:
   PROJECT_ID: ${{ secrets.GCLOUD_PROJECT }}
   GAR_LOCATION: us-central1
   SERVICE_NAME: frontend
   REGION: us-central1
-  # No necesitamos variable para nombre de secreto aquí
+  API_PYTHON_SECRET_NAME: PYTHON_API_URL
 
 jobs:
   build-and-deploy-frontend:
@@ -26,7 +26,7 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }} # O tu WIF
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
@@ -36,19 +36,16 @@ jobs:
       - name: Configure Docker
         run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev --quiet
 
-      # Construir imagen SIN build-arg para la URL de la API
       - name: Build Docker image (Frontend)
         run: |
           docker build \
             -t ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
-            ./frontend # Asume contexto frontend/
+            ./frontend
 
-      # Subir imagen
       - name: Push Docker image (Frontend)
         run: |
           docker push ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
 
-      # Desplegar a Cloud Run con URL HARDCODED en env_vars (SOLO PARA DEBUG)
       - name: Deploy Frontend to Cloud Run
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v1
@@ -56,12 +53,10 @@ jobs:
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.REGION }}
           image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
-          # --- URL Hardcodeada ---
           env_vars: |-
-            PYTHON_API_URL=https://api-551745267811.us-central1.run.app
+            PYTHON_API_URL=${{ secrets[env.API_PYTHON_SECRET_NAME] }}
             PORT=8080
             NODE_ENV=production
-          # ----------------------
           flags: --allow-unauthenticated
 
       - name: Show Deployed URL

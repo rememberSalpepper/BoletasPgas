@@ -17,14 +17,12 @@ export default function ParticlesBackground() {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
   const [bgColor, setBgColor] = useState("rgb(224, 242, 254)") // Inicial: azul claro
 
-  // Colores de la marca
   const colors = [
     "rgb(45, 212, 191)", // teal-400
     "rgb(56, 189, 248)", // sky-400
     "rgb(14, 165, 233)", // sky-500
   ]
 
-  // Efecto para manejar el resize y la animación
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return

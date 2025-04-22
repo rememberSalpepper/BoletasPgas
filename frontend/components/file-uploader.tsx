@@ -18,7 +18,6 @@ export function FileUploader({ onFilesSelected }: FileUploaderProps) {
     if (e.target.files && e.target.files.length > 0) {
       const newFiles = Array.from(e.target.files)
       onFilesSelected(newFiles)
-      // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
       e.target.value = ""
     }
   }

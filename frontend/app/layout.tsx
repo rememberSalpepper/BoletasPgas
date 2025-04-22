@@ -1,4 +1,3 @@
-// app/layout.tsx (Favicon desde /images/logo.png - Sin Comentarios)
 import type React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -12,9 +11,7 @@ export const metadata: Metadata = {
   title: "Pgas - Escáner de Boletas",
   description: "Escanea tus boletas y expórtalas a Excel de manera fácil y rápida",
   icons: {
-    icon: '/images/logo.png', // Favicon principal
-    // shortcut: '/images/logo.png', // Opcional: si quieres usarlo también para accesos directos
-    // apple: '/images/logo.png',    // Opcional: para dispositivos Apple
+    icon: '/images/logo.png',
   },
 };
 

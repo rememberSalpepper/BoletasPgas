@@ -1,9 +1,8 @@
-// components/navbar.tsx (CORREGIDO v5 - Negrita y Botón X)
 "use client";
 
 import { useState } from "react";
 import Image from "next/image";
-import { Button } from "@/components/ui/button"; // Asegúrate que Button se importa
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Info, X, ScanLine, BrainCircuit, Table, FileDown, Upload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
