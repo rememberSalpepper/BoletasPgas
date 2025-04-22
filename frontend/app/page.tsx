@@ -81,9 +81,8 @@ export default function Home() {
       const fd = new FormData();
       const multi = files.length > 1;
       const urlPath = multi ? "extract-multi" : "extract";
-      multi
-        ? files.forEach((f) => fd.append("files", f))
-        : fd.append("file", files[0]);
+      if (multi) files.forEach((f) => fd.append("files", f));
+      else fd.append("file", files[0]);
 
       const res = await fetch(`${ASSET_PREFIX}/api/${urlPath}`, { method: "POST", body: fd });
       if (!res.ok) {
@@ -144,70 +143,97 @@ export default function Home() {
       <Particles className="fixed inset-0 -z-10" quantity={100} />
 
       <div className="min-h-screen w-full flex flex-col items-center justify-center pt-20 pb-10 px-4 space-y-6 text-white">
-        {/* ------------------------------------- */}
-        {/*      Tu encabezado + uploader…        */}
-        <motion.div initial={{opacity:0,y:-30}} animate={{opacity:1,y:0}} transition={{duration:0.6,type:"spring",bounce:0.3}} className="text-center">
+        {/* Header y uploader intactos */}
+        <motion.div
+          initial={{opacity:0,y:-30}} animate={{opacity:1,y:0}}
+          transition={{duration:0.6,type:"spring",bounce:0.3}}
+          className="text-center"
+        >
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold drop-shadow-lg">Extracción de Boletas</h1>
-          <p className="mt-3 text-lg sm:text-xl text-white/80 max-w-xl mx-auto">Sube tus comprobantes y extrae la información automáticamente</p>
+          <p className="mt-3 text-lg sm:text-xl text-white/80 max-w-xl mx-auto">
+            Sube tus comprobantes y extrae la información automáticamente
+          </p>
         </motion.div>
-        <motion.div initial={{opacity:0,scale:0.9}} animate={{opacity:1,scale:1}} transition={{duration:0.5,delay:0.2}} className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-md flex flex-col items-center">
+
+        <motion.div
+          initial={{opacity:0,scale:0.9}} animate={{opacity:1,scale:1}}
+          transition={{duration:0.5,delay:0.2}}
+          className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-md flex flex-col items-center"
+        >
           <div className="flex items-center justify-center mb-4 gap-3">
-            <NextImage src={`${ASSET_PREFIX}/images/logo.png`} alt="Logo" width={40} height={40} className="h-8 w-8 object-contain" />
-            <label className="text-base sm:text-lg font-medium text-gray-900">Sube tus boletas (máx. 10)</label>
+            <NextImage src={`${ASSET_PREFIX}/images/logo.png`} alt="Logo" width={40} height={40} className="h-8 w-8 object-contain"/>
+            <label className="text-base sm:text-lg font-medium text-gray-900">
+              Sube tus boletas (máx. 10)
+            </label>
           </div>
-          <FileUploader onFilesSelected={handleFilesSelected} />
+          <FileUploader onFilesSelected={handleFilesSelected}/>
           <button
             onClick={handleExtract}
             disabled={isLoading||!files.length}
             className="mt-5 w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-3 rounded-lg shadow transform transition duration-300 hover:scale-105 disabled:opacity-50"
           >
             {isLoading
-              ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Extrayendo...</>
-              : <><FileText className="mr-2 h-5 w-5" />Extraer Datos</>
+              ? <><Loader2 className="mr-2 h-5 w-5 animate-spin"/>Extrayendo...</>
+              : <><FileText className="mr-2 h-5 w-5"/>Extraer Datos</>
             }
           </button>
         </motion.div>
-        <motion.div variants={container} initial="hidden" animate="visible" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 w-full max-w-5xl">
+
+        <motion.div variants={container} initial="hidden" animate="visible"
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 w-full max-w-5xl"
+        >
           {previews.map((src,i) => (
             <motion.div key={i} variants={item} className="relative aspect-w-4 aspect-h-3 group">
-              <img src={src} alt={`Boleta ${i+1}`} loading="lazy" className="w-full h-full object-cover rounded-xl shadow-lg border-2 border-white/20" />
+              <img src={src} alt={`Boleta ${i+1}`} loading="lazy"
+                className="w-full h-full object-cover rounded-xl shadow-lg border-2 border-white/20"
+              />
               <div className="absolute bottom-1.5 left-1.5 bg-black bg-opacity-70 text-white text-[10px] px-1.5 py-0.5 rounded-full">
                 {files[i]?.name.length>15 ? files[i].name.substring(0,12)+"..." : files[i].name}
               </div>
-              <button onClick={()=>handleRemoveBoleta(i)} className="absolute top-1.5 right-1.5 bg-red-600/70 text-white w-6 h-6 rounded-full opacity-0 group-hover:opacity-100">
-                ✕
-              </button>
+              <button
+                onClick={()=>handleRemoveBoleta(i)}
+                className="absolute top-1.5 right-1.5 bg-red-600/70 text-white w-6 h-6 rounded-full opacity-0 group-hover:opacity-100"
+              >✕</button>
             </motion.div>
           ))}
         </motion.div>
-        {/* ------------------------------------- */}
 
         {/* Panel de resultados */}
         {results.length>0 && showTable && (
           <motion.div
-            initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.5,type:"spring"}}
-            className="bg-blue-50 rounded-2xl shadow-lg p-6 w-full max-w-6xl"
+            initial={{opacity:0,y:20}} animate={{opacity:1,y:0}}
+            transition={{duration:0.5,type:"spring"}}
+            className="relative z-10 w-full max-w-7xl mx-auto"
           >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Resultados Extraídos</h2>
-              <motion.button
-                onClick={handleExport}
-                className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow"
-                whileHover={{scale:1.05}} whileTap={{scale:0.95}}
-              >
-                Exportar a Excel
-              </motion.button>
+            <div className="bg-white rounded-xl shadow-lg p-6 overflow-x-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Resultados Extraídos</h2>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={()=>setShowTable(false)}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-1 px-3 rounded"
+                  >
+                    Ocultar tabla
+                  </button>
+                  <button
+                    onClick={handleExport}
+                    className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg"
+                  >
+                    Exportar a Excel
+                  </button>
+                </div>
+              </div>
+              <ResultsTable results={results} />
             </div>
-            <ResultsTable results={results} />
           </motion.div>
         )}
 
         {!showTable && results.length>0 && (
           <motion.button
             onClick={()=>setShowTable(true)}
-            className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-2 px-6 rounded-lg shadow"
-            initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.5,delay:0.3,type:"spring"}}
-            whileHover={{scale:1.05}} whileTap={{scale:0.95}}
+            className="relative z-10 mt-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-2 px-6 rounded-lg shadow"
+            initial={{opacity:0,y:20}} animate={{opacity:1,y:0}}
+            transition={{duration:0.5,delay:0.3,type:"spring"}}
           >
             Mostrar tabla
           </motion.button>
