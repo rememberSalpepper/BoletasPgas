@@ -172,7 +172,7 @@ export default function Home() {
           className="text-center"
         >
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold drop-shadow-lg">
-            Extracción de Boletas
+            Extracción de Comprobantes Bancarios
           </h1>
           <p className="mt-3 text-lg sm:text-xl text-white/80 max-w-xl mx-auto">
             Sube tus comprobantes y extrae la información automáticamente
