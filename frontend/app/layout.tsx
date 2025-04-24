@@ -10,9 +10,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Pgas - Escáner de Boletas",
   description: "Escanea tus boletas y expórtalas a Excel de manera fácil y rápida",
-  icons: {
-    icon: 'images/logo.png',
-  },
+  //icons: {
+    //icon: 'images/logo.png',
+  //},
 };
 
 export default function RootLayout({
